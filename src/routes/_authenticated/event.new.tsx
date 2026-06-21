@@ -88,7 +88,7 @@ function CreateEventPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60 bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
-          <Link to="/app"><TabaLogo height={28} /></Link>
+          <Link to="/app"><TabaLogo height={44} /></Link>
           <Link to="/app" className="text-sm text-muted-foreground hover:text-foreground">Cancel</Link>
         </div>
       </header>
