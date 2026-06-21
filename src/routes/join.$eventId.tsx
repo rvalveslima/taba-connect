@@ -43,16 +43,16 @@ function JoinPage() {
   const { event } = Route.useLoaderData();
   const { eventId } = Route.useParams();
   const navigate = useNavigate();
-  const [authMode, setAuthMode] = useState<"new" | "existing">("new");
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const autoJoinedRef = useRef(false);
 
   async function refreshSession() {
     const { data } = await supabase.auth.getUser();
