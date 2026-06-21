@@ -6,6 +6,9 @@ import { TabaLogo } from "@/components/taba-logo";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    as: typeof search.as === "string" ? search.as : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Taba" },
@@ -17,23 +20,29 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "sign-in" | "sign-up";
 
+const ORGANIZER_DEMO_PASSWORD = "Tabaevent123";
+
 function AuthPage() {
   const navigate = useNavigate();
+  const { as } = Route.useSearch();
+  const isOrganizer = as === "organizer";
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(isOrganizer ? ORGANIZER_DEMO_PASSWORD : "");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
 
-  // If already signed in, send to home.
+  const postAuthTarget = isOrganizer ? "/event/new" : "/app";
+
+  // If already signed in, send to home (or event creation in organizer flow).
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/app", replace: true });
+      if (data.user) navigate({ to: postAuthTarget, replace: true });
     });
-  }, [navigate]);
+  }, [navigate, postAuthTarget]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +50,33 @@ function AuthPage() {
     setInfo(null);
     setLoading(true);
     try {
-      if (mode === "sign-up") {
+      if (isOrganizer) {
+        // Demo: try sign in first, auto sign-up on invalid credentials.
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          const msg = signInError.message.toLowerCase();
+          if (msg.includes("invalid") || msg.includes("credentials")) {
+            const { data, error: signUpError } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                emailRedirectTo: window.location.origin,
+                data: { name: email.split("@")[0] },
+              },
+            });
+            if (signUpError) throw signUpError;
+            if (!data.session) {
+              setInfo("Check your email to confirm your account, then come back to sign in.");
+              return;
+            }
+          } else {
+            throw signInError;
+          }
+        }
+      } else if (mode === "sign-up") {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -64,13 +99,14 @@ function AuthPage() {
         });
         if (signInError) throw signInError;
       }
-      navigate({ to: "/app", replace: true });
+      navigate({ to: postAuthTarget, replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
   }
+
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
@@ -95,7 +131,7 @@ function AuthPage() {
     setError(null);
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/app`,
+      redirect_uri: `${window.location.origin}${postAuthTarget}`,
     });
     if (result.error) {
       setError(result.error.message);
@@ -103,8 +139,9 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/app", replace: true });
+    navigate({ to: postAuthTarget, replace: true });
   }
+
 
   if (forgotMode) {
     return (
@@ -159,20 +196,34 @@ function AuthPage() {
             <TabaLogo height={32} />
           </Link>
           <h1 className="mt-4 text-2xl font-semibold">
-            {mode === "sign-in" ? "Sign in" : "Create your account"}
+            {isOrganizer
+              ? "Organizer sign in"
+              : mode === "sign-in"
+                ? "Sign in"
+                : "Create your account"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "sign-in"
-              ? "Welcome back to your village."
-              : "Start building your village."}
+            {isOrganizer
+              ? "Sign in to create your event."
+              : mode === "sign-in"
+                ? "Welcome back to your village."
+                : "Start building your village."}
           </p>
         </div>
+
+        {isOrganizer && (
+          <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
+            Demo access — use any email with password{" "}
+            <span className="font-mono font-semibold">Tabaevent123</span>.
+          </div>
+        )}
 
         {info && (
           <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
             {info}
           </div>
         )}
+
 
         <button
           onClick={handleGoogle}
@@ -221,7 +272,7 @@ function AuthPage() {
           <div>
             <div className="mb-1 flex items-baseline justify-between">
               <label className="block text-xs font-medium" htmlFor="password">Password</label>
-              {mode === "sign-in" && (
+              {mode === "sign-in" && !isOrganizer && (
                 <button
                   type="button"
                   onClick={() => { setForgotMode(true); setError(null); setInfo(null); }}
@@ -254,24 +305,27 @@ function AuthPage() {
             disabled={loading}
             className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            {loading ? "…" : mode === "sign-in" ? "Sign in" : "Create account"}
+            {loading ? "…" : isOrganizer ? "Continue →" : mode === "sign-in" ? "Sign in" : "Create account"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          {mode === "sign-in" ? "New to Taba?" : "Already have an account?"}{" "}
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setInfo(null);
-              setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-            }}
-            className="font-medium text-foreground hover:underline"
-          >
-            {mode === "sign-in" ? "Create an account" : "Sign in"}
-          </button>
-        </p>
+        {!isOrganizer && (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            {mode === "sign-in" ? "New to Taba?" : "Already have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setInfo(null);
+                setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+              }}
+              className="font-medium text-foreground hover:underline"
+            >
+              {mode === "sign-in" ? "Create an account" : "Sign in"}
+            </button>
+          </p>
+        )}
+
       </div>
     </div>
   );

@@ -1,10 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { TabaLogo } from "@/components/taba-logo";
 import { OverlapCircles } from "@/components/overlap-circles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { WaitlistDialog } from "@/components/marketing/waitlist-dialog";
 import {
   ClayCircle,
   CobaltTriangle,
@@ -39,27 +38,21 @@ export const Route = createFileRoute("/")({
 });
 
 function MarketingPage() {
-  const [waitlistSource, setWaitlistSource] = useState<string | null>(null);
-
-  const openWaitlist = (source: string) => setWaitlistSource(source);
+  const navigate = useNavigate();
+  const goOrganizer = () =>
+    navigate({ to: "/auth", search: { as: "organizer" } as never });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Nav onJoin={() => openWaitlist("nav")} />
-      <Hero onJoin={() => openWaitlist("hero")} />
+      <Nav onJoin={goOrganizer} />
+      <Hero onJoin={goOrganizer} />
       <Problem />
       <VillageStory />
       <HowItWorks />
       <WhoItsFor />
       <PricingTeaser />
-      <FinalCTA onJoin={() => openWaitlist("final")} />
+      <FinalCTA onJoin={goOrganizer} />
       <Footer />
-
-      <WaitlistDialog
-        open={waitlistSource !== null}
-        onOpenChange={(o) => !o && setWaitlistSource(null)}
-        source={waitlistSource ?? "unknown"}
-      />
     </div>
   );
 }

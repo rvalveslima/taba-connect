@@ -105,6 +105,7 @@ export type Database = {
           date_start: string | null
           event_code: string
           id: string
+          image_url: string | null
           name: string
           organizer_account_id: string | null
         }
@@ -114,6 +115,7 @@ export type Database = {
           date_start?: string | null
           event_code: string
           id?: string
+          image_url?: string | null
           name: string
           organizer_account_id?: string | null
         }
@@ -123,6 +125,7 @@ export type Database = {
           date_start?: string | null
           event_code?: string
           id?: string
+          image_url?: string | null
           name?: string
           organizer_account_id?: string | null
         }
