@@ -12,7 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JoinEventIdRouteImport } from './routes/join.$eventId'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedEventEventIdIndexRouteImport } from './routes/_authenticated/event.$eventId.index'
+import { Route as AuthenticatedEventEventIdProfileRouteImport } from './routes/_authenticated/event.$eventId.profile'
+import { Route as AuthenticatedEventEventIdAttendeeMembershipIdRouteImport } from './routes/_authenticated/event.$eventId.attendee.$membershipId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -28,21 +32,52 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinEventIdRoute = JoinEventIdRouteImport.update({
+  id: '/join/$eventId',
+  path: '/join/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEventEventIdIndexRoute =
+  AuthenticatedEventEventIdIndexRouteImport.update({
+    id: '/event/$eventId/',
+    path: '/event/$eventId/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEventEventIdProfileRoute =
+  AuthenticatedEventEventIdProfileRouteImport.update({
+    id: '/event/$eventId/profile',
+    path: '/event/$eventId/profile',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEventEventIdAttendeeMembershipIdRoute =
+  AuthenticatedEventEventIdAttendeeMembershipIdRouteImport.update({
+    id: '/event/$eventId/attendee/$membershipId',
+    path: '/event/$eventId/attendee/$membershipId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRoute
+  '/join/$eventId': typeof JoinEventIdRoute
+  '/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
+  '/event/$eventId/': typeof AuthenticatedEventEventIdIndexRoute
+  '/event/$eventId/attendee/$membershipId': typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AuthenticatedAppRoute
+  '/join/$eventId': typeof JoinEventIdRoute
+  '/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
+  '/event/$eventId': typeof AuthenticatedEventEventIdIndexRoute
+  '/event/$eventId/attendee/$membershipId': typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,19 +85,47 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/join/$eventId': typeof JoinEventIdRoute
+  '/_authenticated/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
+  '/_authenticated/event/$eventId/': typeof AuthenticatedEventEventIdIndexRoute
+  '/_authenticated/event/$eventId/attendee/$membershipId': typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/app'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/join/$eventId'
+    | '/event/$eventId/profile'
+    | '/event/$eventId/'
+    | '/event/$eventId/attendee/$membershipId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/app'
-  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/_authenticated/app'
+  to:
+    | '/'
+    | '/auth'
+    | '/app'
+    | '/join/$eventId'
+    | '/event/$eventId/profile'
+    | '/event/$eventId'
+    | '/event/$eventId/attendee/$membershipId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/app'
+    | '/join/$eventId'
+    | '/_authenticated/event/$eventId/profile'
+    | '/_authenticated/event/$eventId/'
+    | '/_authenticated/event/$eventId/attendee/$membershipId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  JoinEventIdRoute: typeof JoinEventIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -88,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$eventId': {
+      id: '/join/$eventId'
+      path: '/join/$eventId'
+      fullPath: '/join/$eventId'
+      preLoaderRoute: typeof JoinEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -95,15 +165,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/event/$eventId/': {
+      id: '/_authenticated/event/$eventId/'
+      path: '/event/$eventId'
+      fullPath: '/event/$eventId/'
+      preLoaderRoute: typeof AuthenticatedEventEventIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/event/$eventId/profile': {
+      id: '/_authenticated/event/$eventId/profile'
+      path: '/event/$eventId/profile'
+      fullPath: '/event/$eventId/profile'
+      preLoaderRoute: typeof AuthenticatedEventEventIdProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/event/$eventId/attendee/$membershipId': {
+      id: '/_authenticated/event/$eventId/attendee/$membershipId'
+      path: '/event/$eventId/attendee/$membershipId'
+      fullPath: '/event/$eventId/attendee/$membershipId'
+      preLoaderRoute: typeof AuthenticatedEventEventIdAttendeeMembershipIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedEventEventIdProfileRoute: typeof AuthenticatedEventEventIdProfileRoute
+  AuthenticatedEventEventIdIndexRoute: typeof AuthenticatedEventEventIdIndexRoute
+  AuthenticatedEventEventIdAttendeeMembershipIdRoute: typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedEventEventIdProfileRoute: AuthenticatedEventEventIdProfileRoute,
+  AuthenticatedEventEventIdIndexRoute: AuthenticatedEventEventIdIndexRoute,
+  AuthenticatedEventEventIdAttendeeMembershipIdRoute:
+    AuthenticatedEventEventIdAttendeeMembershipIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -113,6 +211,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  JoinEventIdRoute: JoinEventIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
