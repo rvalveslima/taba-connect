@@ -229,17 +229,41 @@ function DecisionPage() {
           </section>
         )}
 
-        {/* Message */}
+        {/* Thread */}
+        {thread.length > 0 && (
+          <section className="mb-6 space-y-2">
+            <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Conversation</p>
+            {thread.map((m) => (
+              <div
+                key={m.id}
+                className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+                  m.mine
+                    ? "ml-auto bg-foreground text-background"
+                    : "bg-muted text-foreground"
+                }`}
+              >
+                {m.body}
+              </div>
+            ))}
+          </section>
+        )}
+
+        {/* Compose */}
         <form onSubmit={handleSend} className="space-y-3">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-lg font-semibold">Send a quick opener</h3>
-            <p className="text-xs text-muted-foreground">Pre-filled — tweak it before sending.</p>
+            <h3 className="text-lg font-semibold">
+              {thread.length > 0 ? "Reply" : "Send a quick opener"}
+            </h3>
+            {thread.length === 0 && (
+              <p className="text-xs text-muted-foreground">Pre-filled — tweak it before sending.</p>
+            )}
           </div>
           <textarea
             required
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={4}
+            rows={thread.length > 0 ? 2 : 4}
+            placeholder={thread.length > 0 ? "Write a reply…" : ""}
             className="w-full resize-none rounded-md border border-border bg-background p-3 text-sm leading-relaxed text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <div className="flex justify-end gap-3">
@@ -248,14 +272,14 @@ function DecisionPage() {
               params={{ eventId }}
               className="rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent"
             >
-              Not now
+              Back
             </Link>
             <button
               type="submit"
               disabled={sending || !body.trim()}
               className="rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              {sending ? "Sending…" : "Send message"}
+              {sending ? "Sending…" : "Send"}
             </button>
           </div>
         </form>
