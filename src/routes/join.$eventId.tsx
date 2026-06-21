@@ -3,7 +3,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type EventRow = { id: string; name: string; date_start: string | null; date_end: string | null };
+type EventRow = {
+  id: string;
+  name: string;
+  date_start: string | null;
+  date_end: string | null;
+  image_url: string | null;
+};
 
 export const Route = createFileRoute("/join/$eventId")({
   head: () => ({
@@ -15,7 +21,7 @@ export const Route = createFileRoute("/join/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, date_start, date_end")
+      .select("id, name, date_start, date_end, image_url")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) {
@@ -148,13 +154,23 @@ function JoinPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto grid min-h-screen max-w-5xl grid-cols-1 md:grid-cols-2">
         {/* Left: event context */}
-        <aside className="flex flex-col justify-between border-b border-border bg-primary p-8 text-primary-foreground md:border-b-0 md:border-r">
-          <div>
+        <aside className="relative flex flex-col justify-between overflow-hidden border-b border-border bg-primary p-8 text-primary-foreground md:border-b-0 md:border-r">
+          {event.image_url && (
+            <>
+              <img
+                src={event.image_url}
+                alt={event.name}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-primary/70" />
+            </>
+          )}
+          <div className="relative">
             <p className="text-sm uppercase tracking-[0.18em] opacity-80">You're joining</p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight">{event.name}</h1>
             {dateLine && <p className="mt-2 text-sm opacity-90">{dateLine}</p>}
           </div>
-          <div className="mt-10 space-y-3 text-sm opacity-95">
+          <div className="relative mt-10 space-y-3 text-sm opacity-95">
             <p className="font-medium">Build your own village.</p>
             <p className="opacity-80">
               Two or three real connections — chosen, not collected.
