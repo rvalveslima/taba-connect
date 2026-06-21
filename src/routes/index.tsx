@@ -121,9 +121,6 @@ function Hero({ onJoin }: { onJoin: () => void }) {
             >
               Join as organizer →
             </Button>
-            <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">
-              Free while in beta
-            </span>
           </div>
         </div>
       </div>
