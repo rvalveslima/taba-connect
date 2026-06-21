@@ -272,7 +272,7 @@ function AuthPage() {
           <div>
             <div className="mb-1 flex items-baseline justify-between">
               <label className="block text-xs font-medium" htmlFor="password">Password</label>
-              {mode === "sign-in" && (
+              {mode === "sign-in" && !isOrganizer && (
                 <button
                   type="button"
                   onClick={() => { setForgotMode(true); setError(null); setInfo(null); }}
@@ -305,24 +305,27 @@ function AuthPage() {
             disabled={loading}
             className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            {loading ? "…" : mode === "sign-in" ? "Sign in" : "Create account"}
+            {loading ? "…" : isOrganizer ? "Continue →" : mode === "sign-in" ? "Sign in" : "Create account"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          {mode === "sign-in" ? "New to Taba?" : "Already have an account?"}{" "}
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setInfo(null);
-              setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-            }}
-            className="font-medium text-foreground hover:underline"
-          >
-            {mode === "sign-in" ? "Create an account" : "Sign in"}
-          </button>
-        </p>
+        {!isOrganizer && (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            {mode === "sign-in" ? "New to Taba?" : "Already have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setInfo(null);
+                setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+              }}
+              className="font-medium text-foreground hover:underline"
+            >
+              {mode === "sign-in" ? "Create an account" : "Sign in"}
+            </button>
+          </p>
+        )}
+
       </div>
     </div>
   );
