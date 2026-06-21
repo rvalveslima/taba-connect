@@ -169,11 +169,10 @@ function VillageStory() {
       {/* big abstract composition */}
       <div className="absolute -left-32 top-20 h-[520px] w-[520px] rounded-full border-2 border-background/40" />
       <div
-        className="absolute right-[-180px] bottom-[-180px] h-[640px] w-[640px]"
+        className="pointer-events-none absolute right-[-280px] bottom-[-280px] h-[560px] w-[560px] opacity-80"
         style={{
           background: "var(--primary)",
           borderRadius: "9999px",
-          opacity: 0.92,
         }}
       />
       <CobaltTriangle className="absolute left-1/2 top-10 h-32 w-32 opacity-90" />
