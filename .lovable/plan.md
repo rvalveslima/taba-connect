@@ -1,65 +1,42 @@
-## How to share the E2E flow without "already logged in" collisions
+## Goal
+After an organizer signs in (any email + `Tabaevent123`), land them on a page that lists every event they previously created with that email, instead of jumping straight into the new-event form. Same email → same `auth.users` row → same `organizer_account_id`, so the events are already persisted; we just need to surface them.
 
-The "already logged in" problem isn't a bug — your browser is signed in as one persona and every route then bypasses sign-in. Two practical ways to share:
+## Changes
 
-**For non-Lovable testers (recommended):**
-1. Top-right of the editor → **Share → Share preview**. That gives you a 7-day public preview URL that anyone can open without a Lovable login.
-2. Tell each tester to open it in an **Incognito / Private window** (or a fresh browser profile). Each persona = one incognito window. Closing the window wipes the session.
+### 1. New route: `/organizer` (organizer home)
+File: `src/routes/_authenticated/organizer.tsx`
 
-**For yourself while testing locally:**
-- Open `/app` → click "Sign out" before switching personas.
-- Or just open a new Incognito window per persona (organizer, attendee A, attendee B).
+- Loads `events` where `organizer_account_id = auth.uid()`, ordered by `created_at desc`. Selects `id, name, date_start, date_end, event_code, image_url, created_at`.
+- For each event, fetches attendee count via `event_memberships` count query keyed by `event_id`.
+- Renders:
+  - Header with TabaLogo + "Signed in as {email}" + Sign out.
+  - H1 "Your events".
+  - Primary CTA "+ Create new event" → `/event/new`.
+  - Empty state when no events: friendly copy + same CTA.
+  - List of cards (cover image thumb, name, dates, attendee count, event code). Each card has two actions:
+    - "Open share page" → `/event/$eventId/share` (link + QR to resend to attendees).
+    - "Open dashboard" → `/event/$eventId` (the attendee-style village view; organizer is a member of their own event so they have access).
 
-I'll also make the testing surface friendlier so you stop getting trapped (see fix #1 and #2 below).
+### 2. Redirect organizer post-auth to the new home
+File: `src/routes/auth.tsx`
+- Change `postAuthTarget` for `isOrganizer` from `/event/new` to `/organizer`.
+- The "Continue as {currentEmail}" banner already uses `postAuthTarget`, so it'll route correctly when an organizer is already signed in.
 
----
+### 3. Share page: add a back-link to organizer home
+File: `src/routes/_authenticated/event.$eventId.share.tsx`
+- Add a small "← Your events" link in the header that goes to `/organizer`, so an organizer who just created an event can get back to the list.
 
-## QA scan — what's working
+### 4. Landing page CTA wording (small)
+File: `src/routes/index.tsx`
+- No behavior change; "Join as organizer" still goes to `/auth?as=organizer`. After sign-in they now hit `/organizer` and choose existing or new.
 
-- Organizer flow: `/` → "Join as organizer" → `/auth?as=organizer` → demo login (`Tabaevent123`) → `/event/new` → image upload → `/event/$eventId/share` with QR + link. ✅
-- Attendee flow: `/join/$eventId` (public, shows event name + dates + cover image) → sign up/in → membership created → `/event/$eventId/profile` → "Find people" → `/event/$eventId` dashboard. ✅
-- Anon SELECT on `events` so logged-out attendees can preview shared links. ✅
-- Membership insert is idempotent (no duplicate rows when the organizer joins their own event). ✅
-
-## QA scan — bugs and rough edges to fix
-
-### 1. Stale session hijacks the organizer flow
-On `/auth?as=organizer`, the `useEffect` calls `getUser()` and, if any user is signed in, immediately redirects to `/event/new` — bypassing the demo login. So a tester signed in as an attendee who clicks "Join as organizer" silently becomes an organizer with their attendee account. Fix: when `as=organizer` and the current session's email doesn't match what they're about to type, surface a "You're signed in as X — sign out to continue as organizer" banner with a one-click sign-out, instead of auto-redirecting.
-
-### 2. No way to switch accounts from `/auth`
-Testers landing on `/auth` who are already signed in get bounced before they can sign in as someone else. Fix: add a small "Signed in as X — sign out" link at the top of `/auth` whenever a session exists, so personas can be swapped without hunting for `/app`.
-
-### 3. `/auth` hydration warning in the console
-React logs `Hydration failed … <AuthPage> vs <Suspense>` on every visit to `/auth`. Root cause: the route is `ssr: false`, so the server emits the suspense fallback and the client mounts the real component — TanStack's pending component contract triggers the warning. Cosmetic only (page works), but it pollutes the error overlay during testing. Fix: set an explicit `pendingComponent: () => null` on the `/auth` route so server and client agree on the initial markup.
-
-### 4. `/app` "Loading…" can hang if the session is gone
-In `src/routes/_authenticated/app.tsx`, `setLoading(false)` only runs after the membership query, but the early return on no user leaves `loading` permanently true. The `_authenticated` gate normally redirects first, but on a soft sign-out the dashboard can briefly stick on "Loading…". Fix: move `setLoading(false)` into a `finally`.
-
-### 5. Unused `DEMO_EVENT_ID` constant in `/app`
-`const DEMO_EVENT_ID = "…"` and `ACTIVE_WINDOW_MS` are declared and never used. Dead code — remove.
-
-### 6. Profile page redirects logged-in attendee back to `/join/$eventId`
-On `/event/$eventId/profile`, if the membership query returns nothing (RLS hiccup or stale data), the page redirects to `/join/$eventId` — which then sees an existing membership and bounces back to `/profile`. Potential redirect loop. Fix: when the redirect target would be the join page for an event the user already belongs to, send them to `/app` with a toast instead.
-
-### 7. Join-by-code uses `ilike` without escaping
-`/app` joins by code via `.ilike("event_code", trimmed)`. If a tester pastes a code with `%` or `_`, it becomes a wildcard. Low risk for the demo, but worth switching to `eq()` with `.toUpperCase()` since codes are uppercase A-Z/2-9.
-
-### 8. Mobile QR + share panel polish
-On `/event/$eventId/share` the QR canvas is fixed 180px and sits next to the URL input; on very narrow screens the layout already stacks, but the copy button can wrap awkwardly. Minor — confirm on a 360px viewport.
-
----
-
-## What I'll change in build mode
-
-- `src/routes/auth.tsx`: drop the unconditional auto-redirect on existing session; render a "Signed in as … sign out" banner at the top (both organizer and attendee modes); add `pendingComponent: () => null` to the route to silence the hydration warning.
-- `src/routes/_authenticated/app.tsx`: `try/finally` on `setLoading`, remove the unused `DEMO_EVENT_ID` and `ACTIVE_WINDOW_MS`, switch join-by-code to `eq` + `.toUpperCase()`.
-- `src/routes/_authenticated/event.$eventId.profile.tsx`: if membership is missing, redirect to `/app` with a toast instead of `/join/$eventId`.
-
-No DB changes. No design changes. Nothing else touched.
+## Out of scope
+- No DB schema changes — `events.organizer_account_id` and RLS (`events_select_authenticated`, `events_insert_as_organizer`) already do the right thing.
+- No edits to attendee flow, profile, or dashboard.
+- No deletion/edit of events from the organizer home in this pass (can be a follow-up).
 
 ## Verification
-
-1. Incognito window → open share link → sign up as attendee → land on profile → save → land on dashboard.
-2. In the same window click "Sign out" on `/app` → land on `/auth` → "Signed in as" banner is gone → sign in as a different email → land on `/app` clean.
-3. While signed in as an attendee, click "Join as organizer" on `/` → land on `/auth?as=organizer` and see the "Signed in as X — sign out" banner (no silent redirect to `/event/new`).
-4. Refresh `/auth` → no React hydration warning in the console.
+1. Sign in as organizer with `alice@test.com / Tabaevent123` → land on `/organizer` empty state → click Create → make event "Alpha" → share page → back-link returns to `/organizer` showing "Alpha".
+2. Create a second event "Beta" → `/organizer` now lists both, newest first.
+3. Sign out → sign back in with same email → both events still listed.
+4. Sign in with a different email → see only that email's events (empty for a fresh address).

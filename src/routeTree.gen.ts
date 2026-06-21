@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JoinEventIdRouteImport } from './routes/join.$eventId'
+import { Route as AuthenticatedOrganizerRouteImport } from './routes/_authenticated/organizer'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedEventNewRouteImport } from './routes/_authenticated/event.new'
 import { Route as AuthenticatedEventEventIdIndexRouteImport } from './routes/_authenticated/event.$eventId.index'
@@ -50,6 +51,11 @@ const JoinEventIdRoute = JoinEventIdRouteImport.update({
   id: '/join/$eventId',
   path: '/join/$eventId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedOrganizerRoute = AuthenticatedOrganizerRouteImport.update({
+  id: '/organizer',
+  path: '/organizer',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
+  '/organizer': typeof AuthenticatedOrganizerRoute
   '/join/$eventId': typeof JoinEventIdRoute
   '/event/new': typeof AuthenticatedEventNewRoute
   '/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/app': typeof AuthenticatedAppRoute
+  '/organizer': typeof AuthenticatedOrganizerRoute
   '/join/$eventId': typeof JoinEventIdRoute
   '/event/new': typeof AuthenticatedEventNewRoute
   '/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/_authenticated/organizer': typeof AuthenticatedOrganizerRoute
   '/join/$eventId': typeof JoinEventIdRoute
   '/_authenticated/event/new': typeof AuthenticatedEventNewRoute
   '/_authenticated/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/app'
+    | '/organizer'
     | '/join/$eventId'
     | '/event/new'
     | '/event/$eventId/profile'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/app'
+    | '/organizer'
     | '/join/$eventId'
     | '/event/new'
     | '/event/$eventId/profile'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/_authenticated/app'
+    | '/_authenticated/organizer'
     | '/join/$eventId'
     | '/_authenticated/event/new'
     | '/_authenticated/event/$eventId/profile'
@@ -223,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/organizer': {
+      id: '/_authenticated/organizer'
+      path: '/organizer'
+      fullPath: '/organizer'
+      preLoaderRoute: typeof AuthenticatedOrganizerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -270,6 +289,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedOrganizerRoute: typeof AuthenticatedOrganizerRoute
   AuthenticatedEventNewRoute: typeof AuthenticatedEventNewRoute
   AuthenticatedEventEventIdProfileRoute: typeof AuthenticatedEventEventIdProfileRoute
   AuthenticatedEventEventIdShareRoute: typeof AuthenticatedEventEventIdShareRoute
@@ -279,6 +299,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedOrganizerRoute: AuthenticatedOrganizerRoute,
   AuthenticatedEventNewRoute: AuthenticatedEventNewRoute,
   AuthenticatedEventEventIdProfileRoute: AuthenticatedEventEventIdProfileRoute,
   AuthenticatedEventEventIdShareRoute: AuthenticatedEventEventIdShareRoute,
