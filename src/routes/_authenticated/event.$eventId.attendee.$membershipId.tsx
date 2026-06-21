@@ -29,6 +29,7 @@ function DecisionPage() {
   const [overlap, setOverlap] = useState<string[]>([]);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [thread, setThread] = useState<{ id: string; body: string; sent_at: string; mine: boolean }[]>([]);
 
   useEffect(() => {
     (async () => {
