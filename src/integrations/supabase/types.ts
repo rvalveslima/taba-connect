@@ -26,7 +26,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          id?: string
+          id: string
           industry?: string | null
           languages?: string[] | null
           linkedin_handle?: string | null
@@ -100,6 +100,7 @@ export type Database = {
           event_code: string
           id: string
           name: string
+          organizer_account_id: string | null
         }
         Insert: {
           created_at?: string
@@ -108,6 +109,7 @@ export type Database = {
           event_code: string
           id?: string
           name: string
+          organizer_account_id?: string | null
         }
         Update: {
           created_at?: string
@@ -116,8 +118,17 @@ export type Database = {
           event_code?: string
           id?: string
           name?: string
+          organizer_account_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_organizer_account_id_fkey"
+            columns: ["organizer_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -173,7 +184,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_event_member: { Args: { _event_id: string }; Returns: boolean }
+      is_my_membership: { Args: { _membership_id: string }; Returns: boolean }
+      shares_event_with: { Args: { _other: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
