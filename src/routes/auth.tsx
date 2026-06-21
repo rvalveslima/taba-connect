@@ -27,7 +27,7 @@ function AuthPage() {
   // If already signed in, send to home.
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/", replace: true });
+      if (data.user) navigate({ to: "/app", replace: true });
     });
   }, [navigate]);
 
@@ -53,7 +53,7 @@ function AuthPage() {
         });
         if (signInError) throw signInError;
       }
-      navigate({ to: "/", replace: true });
+      navigate({ to: "/app", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -73,7 +73,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/", replace: true });
+    navigate({ to: "/app", replace: true });
   }
 
   return (
