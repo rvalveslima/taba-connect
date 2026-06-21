@@ -458,10 +458,21 @@ function Footer() {
     <footer className="border-t-2 border-foreground bg-background">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-8 lg:px-10">
         <TabaLogo height={28} />
-        <p className="font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          © {new Date().getFullYear()} Taba — Build your own village
-        </p>
+        <div className="flex flex-col items-end gap-1">
+          <p className="font-display text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            © {new Date().getFullYear()} Taba — Build your own village
+          </p>
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-display text-xs uppercase tracking-[0.2em] text-foreground underline underline-offset-4 hover:text-primary"
+          >
+            Terms & Conditions
+          </a>
+        </div>
       </div>
     </footer>
+
   );
 }
