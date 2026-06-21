@@ -83,21 +83,18 @@ function Hero({ onJoin }: { onJoin: () => void }) {
     <section className="relative overflow-hidden border-b-2 border-foreground">
       {/* Geometric backdrop */}
       <GridLines className="absolute inset-0 h-full w-full" />
-      <ClayCircle className="absolute -right-24 -top-24 h-[420px] w-[420px] opacity-95" />
-      <CobaltTriangle className="absolute -bottom-16 left-[8%] h-56 w-56 opacity-90" />
-      <InkSquare className="absolute right-[18%] top-1/2 h-10 w-10 -translate-y-1/2" />
+      <ClayCircle className="pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] opacity-95 sm:block" />
+      <CobaltTriangle className="pointer-events-none absolute -bottom-16 left-[8%] hidden h-56 w-56 opacity-90 sm:block" />
+      <InkSquare className="pointer-events-none absolute right-[18%] top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:block" />
       <GrainOverlay />
 
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-24 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-32">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-32">
         <div className="relative lg:col-span-8">
           <p className="mb-6 inline-block border-2 border-foreground bg-background px-3 py-1 font-display text-xs uppercase tracking-[0.2em]">
             For event organizers
           </p>
-          <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
-            The hardest part of networking
-            <br />
-            isn't talking to people.
-            <br />
+          <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
+            The hardest part of networking isn't talking to people.{" "}
             <span className="text-primary">It's knowing who to talk to.</span>
           </h1>
           <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
