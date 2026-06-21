@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { TabaLogo } from "@/components/taba-logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4">
-      <h1 className="text-4xl font-semibold tracking-tight">Taba</h1>
+      <TabaLogo height={56} />
       <p className="max-w-md text-center text-muted-foreground">
         Build your own village. Real connections at events — chosen, not collected.
       </p>
