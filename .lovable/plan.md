@@ -1,78 +1,57 @@
-## Pass A — correctness & security (do first)
+# Taba organizer marketing landing page
 
-Small, focused, removes real risks. No new screens.
+Replace the current placeholder `src/routes/index.tsx` with a full marketing page. No changes to attendee flow (`join/$eventId`, `_authenticated/event.*`, profile, filter, decision) or to Nala's dashboard routes/schema.
 
-### A1. Input validation on profile save
-Add a zod schema to `src/routes/_authenticated/event.$eventId.profile.tsx` and validate before the Supabase update. Caps:
-- `name` 1–100, trim, required
-- `role`, `company`, `location` ≤ 120, trim, optional
-- `linkedin_handle` ≤ 200, see A2
-- `looking_for`, `give_back` ≤ 500, trim
-- `languages` ≤ 20 entries, each ≤ 40
-- `goal_tags` only values present in `INTEREST_TAGS`
+## Scope guardrails
 
-On failure, surface the first message via `toast.error` and don't navigate.
+- Only edits `src/routes/index.tsx` and adds a few small presentational components/assets.
+- No new auth, no organizer signup flow, no event creation.
+- "Join as organizer" and the pricing callout both open the same lightweight **waitlist email capture** (modal/inline form).
+- No "join as attendee" entry point on this page.
 
-### A2. LinkedIn handle: normalize + sanitize
-Save format: bare handle only (e.g. `raquel-lima`). Logic at save:
-- accept `https://linkedin.com/in/<handle>`, `linkedin.com/in/<handle>`, `/in/<handle>`, `/<handle>`, or `<handle>`
-- strip protocol/host/path; keep the segment after `/in/` (or the whole input if no slashes)
-- reject if it contains `:`, whitespace, `<`, `>`, or `"` (blocks `javascript:` and HTML injection)
-- regex: `^[A-Za-z0-9-_.]{2,100}$`
+## Waitlist capture (backend)
 
-On render (attendee detail page), always construct `https://www.linkedin.com/in/<encodeURIComponent(handle)>` — never use the raw stored value as href.
+Minimal, isolated from existing schema:
 
-### A3. Profile-completeness gating
-On `/event/$eventId/` (dashboard), if the user's own membership has empty `goal_tags`, redirect to `/event/$eventId/profile` instead of rendering. The landing page already routes incomplete profiles correctly; this closes the direct-URL hole.
+- New migration: `public.organizer_waitlist` (`id uuid pk`, `email citext unique not null`, `source text` (e.g. `hero`, `pricing`, `final`), `created_at timestamptz default now()`).
+- GRANT `INSERT` to `anon` + `authenticated`; `ALL` to `service_role`. RLS on. Single policy: `INSERT` allowed for anyone, no SELECT/UPDATE/DELETE to public.
+- Client inserts via the existing `supabase` browser client. On unique-violation, show "You're already on the list" success state.
+- No email sending in this phase — just store. (Confirmation emails can come later.)
 
-### A4. Sign-out hygiene
-In `/app` and the dashboard's sign-out handler:
-```
-await queryClient.cancelQueries();
-queryClient.clear();
-await supabase.auth.signOut();
-navigate({ to: "/auth", replace: true });
-```
-We don't use React Query yet, but the pattern is cheap and future-proofs it. If we have no `queryClient` in scope, just keep `signOut` + `replace: true` — that part is already correct.
+## Page structure (`src/routes/index.tsx`)
 
-### A5. Enable HIBP leaked-password check
-Call `configure_auth` with `password_hibp_enabled: true` (keep other flags at current values: `disable_signup: false`, `auto_confirm_email: false` unless you want demo mode, `external_anonymous_users_enabled: false`).
+Sections, in order, each as a clearly demarcated block with Bauhaus grid composition:
 
----
+1. **Hero** — top nav (Taba logo only, no attendee login link). Headline carrying the contacts-vs-connections tension. Subhead about leaving with 2–3 real connections. Primary CTA "Join as organizer" → opens waitlist modal. Background composition uses primary geometric shapes (clay circle, cobalt triangle, ink grid lines) on cream.
+2. **The problem** — names the LinkedIn-wall and post-event drop-off directly. Two-column geometric layout, big type.
+3. **The village story** (centerpiece, largest vertical real estate) — Tupi etymology, relational meaning of "village," bridge to "build your own village," tie to research finding (common ground + openness before approach). Uses the `OverlapCircles` motif here as the visual anchor.
+4. **How it works** — 3 numbered steps from attendee POV (join event → see common ground → start real conversation). Strict 3-column geometric grid, minimal copy.
+5. **Who it's for** — 2–3 lines positioning against algorithmic matching and ongoing community platforms.
+6. **Pricing teaser** — "Pricing for organizers — join the waitlist to be first to know." Email capture inline, same backend as hero CTA (source = `pricing`).
+7. **Final CTA** — short declarative restatement of the village thesis, repeat "Join as organizer" button (source = `final`).
+8. **Footer** — minimal: logo, copyright, contact email placeholder.
 
-## Pass B — missing features
+## Visual system
 
-### B1. Organizer "create event" screen
-New route `src/routes/_authenticated/event.new.tsx`. Form: name (required), date_start, date_end, event_code (auto-generated 6-char if blank). On submit:
-1. `INSERT INTO events` with `organizer_account_id = auth.uid()`
-2. `INSERT INTO event_memberships` so the organizer is also an attendee (needed for the share/dashboard to load)
-3. navigate to `/event/$eventId`
+- Reuse existing tokens in `src/styles.css` (clay/cobalt/ink/cream, Poppins, Inter). No new color tokens needed.
+- Bauhaus-meets-nature: bold primary shapes (circle/triangle/square), thick rules, asymmetric grid, generous whitespace; warmed with subtle grain/noise texture overlay and slightly organic shape placement (not perfectly aligned). No rounded-soft SaaS cards. No gradients beyond palette.
+- Use existing `OverlapCircles` component in the village section (do **not** conflate with the logo dots motif).
+- New small presentational components colocated in `src/components/marketing/`: `Hero`, `ProblemSection`, `VillageStory`, `HowItWorks`, `WhoItsFor`, `PricingTeaser`, `FinalCTA`, `MarketingFooter`, `WaitlistDialog` (shared modal using existing shadcn `Dialog` + `Input` + `Button`).
 
-Add a "Create event" button on `/app` next to the join-by-code panel.
+## SEO / head
 
-### B2. Google sign-in: configure provider
-Call `configure_social_auth` with `providers: ["google"]`. The button on `/auth` already calls `lovable.auth.signInWithOAuth("google")`, so no code change.
+Update the route's `head()` with marketing-focused title, description, OG title/description (text only; skip og:image for now per leaf-image rule unless we generate a hero image — defer).
 
-### B3. Password reset
-- Add "Forgot password?" link on `/auth` (sign-in mode) → calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/reset-password` })`
-- Create public route `/reset-password` that shows a new-password form and calls `supabase.auth.updateUser({ password })`, then redirects to `/app`
+## Technical details
 
-### B4. Email-confirmation handling on `/auth`
-After `signUp` succeeds with no session returned, don't navigate to `/app` (that loops back to `/auth`). Show: "Check your email to confirm your account, then sign in." Stay on the page.
+- Route file: `src/routes/index.tsx` — keep `createFileRoute("/")`, add `head()` and replace the component.
+- Waitlist insert: client-side `supabase.from('organizer_waitlist').insert({ email, source })` with zod email validation; toast on success/error via existing `sonner`.
+- Migration via Supabase tool with proper GRANT + RLS per public-schema rules.
+- No changes to `src/routes/auth.tsx`, `_authenticated/*`, `join.$eventId.tsx`, or `reset-password.tsx`.
 
-### B5. Messaging UI
-Smallest useful version: on the attendee detail page, list prior messages between me and them (already permitted by RLS), keep the send form. Add a small "Messages" link in the dashboard header that lists threads (group by `recipient_membership_id`). Inbox is optional — confirm if you want it now or later.
+## Out of scope (explicit)
 
-### B6. Filter state in URL
-Move dashboard filters (`role`, `company`, `goal`, `language`, `openOnly`) into search params via `validateSearch` + `zodValidator`. Filters survive refresh and are shareable.
-
----
-
-## Notes / out of scope
-
-- **Auth email templates** (branded reset/confirm emails) — separate setup that needs an email domain. Skipping unless you ask.
-- **Edit-after-create for events** — organizers can't currently change name/dates from the UI. Add later if needed.
-- **Leave-event button** — RLS allows it, no UI. Skipping unless you ask.
-- **Real "past" semantics** based on `date_end < today` — small, can fold into B1 or do separately.
-
-I'll execute Pass A in one batch, then Pass B in a second batch. Approve and I'll start.
+- Organizer signup, event creation, organizer dashboard.
+- Real pricing tiers.
+- Email confirmation / drip to waitlist subscribers.
+- Any attendee-facing entry from this page.
