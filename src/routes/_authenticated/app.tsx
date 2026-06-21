@@ -171,7 +171,15 @@ function AppHome() {
             </section>
 
             <section className="rounded-lg border border-dashed border-border bg-card/50 p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Join another event</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Join or host</p>
+                <Link
+                  to="/event/new"
+                  className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
+                >
+                  + Create event
+                </Link>
+              </div>
               <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <form onSubmit={handleJoinByCode} className="flex flex-1 gap-2">
                   <input

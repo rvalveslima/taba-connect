@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { INTEREST_TAGS } from "@/lib/interest-tags";
+import { profileSchema, normalizeLinkedin } from "@/lib/profile-validation";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
 
@@ -93,24 +94,47 @@ function ProfilePage() {
     if (!account || !membership) return;
     setSaving(true);
     try {
+      let linkedinNormalized: string | null;
+      try {
+        linkedinNormalized = normalizeLinkedin(account.linkedin_handle);
+      } catch (linkedinErr) {
+        throw linkedinErr;
+      }
+
+      const parsed = profileSchema.safeParse({
+        name: account.name,
+        role: account.role,
+        company: account.company,
+        location: account.location,
+        linkedin_handle: linkedinNormalized,
+        languages: account.languages ?? [],
+        goal_tags: tags,
+        looking_for: lookingFor,
+        give_back: giveBack,
+      });
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues[0]?.message ?? "Please check your inputs.");
+      }
+      const v = parsed.data;
+
       const [{ error: accErr }, { error: memErr }] = await Promise.all([
         supabase
           .from("accounts")
           .update({
-            name: account.name,
-            role: account.role,
-            company: account.company,
-            location: account.location,
-            linkedin_handle: account.linkedin_handle,
-            languages: account.languages,
+            name: v.name,
+            role: v.role || null,
+            company: v.company || null,
+            location: v.location || null,
+            linkedin_handle: v.linkedin_handle || null,
+            languages: v.languages,
           })
           .eq("id", account.id),
         supabase
           .from("event_memberships")
           .update({
-            goal_tags: tags,
-            looking_for: lookingFor || null,
-            give_back: giveBack || null,
+            goal_tags: v.goal_tags,
+            looking_for: v.looking_for || null,
+            give_back: v.give_back || null,
             open_to_connect: openToConnect,
           })
           .eq("id", membership.id),

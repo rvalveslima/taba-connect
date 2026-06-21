@@ -5,8 +5,23 @@ import { overlapTags, INTEREST_TAGS } from "@/lib/interest-tags";
 import { SharePanel } from "@/components/share-panel";
 import { TabaLogo } from "@/components/taba-logo";
 
+type DashboardSearch = {
+  role?: string;
+  company?: string;
+  goal?: string;
+  language?: string;
+  open?: boolean;
+};
+
 export const Route = createFileRoute("/_authenticated/event/$eventId/")({
   head: () => ({ meta: [{ title: "Attendees — Taba" }] }),
+  validateSearch: (search: Record<string, unknown>): DashboardSearch => ({
+    role: typeof search.role === "string" ? search.role : undefined,
+    company: typeof search.company === "string" ? search.company : undefined,
+    goal: typeof search.goal === "string" ? search.goal : undefined,
+    language: typeof search.language === "string" ? search.language : undefined,
+    open: search.open === true || search.open === "true" ? true : undefined,
+  }),
   component: DashboardPage,
 });
 
@@ -53,12 +68,35 @@ function DashboardPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // filters
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [languageFilter, setLanguageFilter] = useState<string>("all");
-  const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [goalFilter, setGoalFilter] = useState<string>("all");
-  const [openOnly, setOpenOnly] = useState(false);
+  // filters — backed by URL search params
+  const search = Route.useSearch();
+  const roleFilter = search.role ?? "all";
+  const languageFilter = search.language ?? "all";
+  const companyFilter = search.company ?? "all";
+  const goalFilter = search.goal ?? "all";
+  const openOnly = search.open === true;
+
+  function setSearchParam(key: keyof DashboardSearch, value: string | boolean | undefined) {
+    navigate({
+      to: "/event/$eventId",
+      params: { eventId },
+      search: (prev: DashboardSearch) => {
+        const next = { ...prev } as DashboardSearch;
+        if (value === undefined || value === "all" || value === false) {
+          delete next[key];
+        } else {
+          (next as any)[key] = value;
+        }
+        return next;
+      },
+      replace: true,
+    });
+  }
+  const setRoleFilter = (v: string) => setSearchParam("role", v);
+  const setLanguageFilter = (v: string) => setSearchParam("language", v);
+  const setCompanyFilter = (v: string) => setSearchParam("company", v);
+  const setGoalFilter = (v: string) => setSearchParam("goal", v);
+  const setOpenOnly = (v: boolean) => setSearchParam("open", v);
 
   useEffect(() => {
     (async () => {
@@ -86,11 +124,15 @@ function DashboardPage() {
         navigate({ to: "/join/$eventId", params: { eventId }, replace: true });
         return;
       }
+      const mine = myMem.goal_tags ?? [];
+      if (mine.length === 0) {
+        navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
+        return;
+      }
       setEventName(ev.name);
       setEventCode(ev.event_code ?? null);
       setIsOrganizer(ev.organizer_account_id === userData.user.id);
       setMyName(myAcc?.name ?? "");
-      const mine = myMem.goal_tags ?? [];
       setMyTags(mine);
 
       const mapped: Attendee[] = (rows ?? []).map((r: any) => ({
@@ -187,7 +229,7 @@ function DashboardPage() {
           <FilterPill label="Goal" value={goalFilter} onChange={setGoalFilter} options={goalOptions as unknown as string[]} />
           <FilterPill label="Language" value={languageFilter} onChange={setLanguageFilter} options={languageOptions} />
           <button
-            onClick={() => setOpenOnly((v) => !v)}
+            onClick={() => setOpenOnly(!openOnly)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition ${
               openOnly
                 ? "border-[color:var(--moss)] bg-[color:color-mix(in_oklab,var(--moss)_22%,transparent)] text-foreground"
