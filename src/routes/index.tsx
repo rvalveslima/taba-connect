@@ -61,14 +61,15 @@ function MarketingPage() {
 
 function Nav({ onJoin }: { onJoin: () => void }) {
   return (
-    <header className="relative z-20 border-b-2 border-foreground">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-        <TabaLogo height={36} />
+    <header className="relative z-20 border-b-2 border-foreground bg-background">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
+        <TabaLogo height={32} />
         <Button
           onClick={onJoin}
-          className="rounded-none px-5 font-display text-sm uppercase tracking-wider"
+          className="shrink-0 rounded-none px-3 py-2 font-display text-[11px] uppercase tracking-wider sm:px-5 sm:text-sm"
         >
-          Join as organizer
+          <span className="sm:hidden">Organize</span>
+          <span className="hidden sm:inline">Join as organizer</span>
         </Button>
       </div>
     </header>
@@ -82,21 +83,18 @@ function Hero({ onJoin }: { onJoin: () => void }) {
     <section className="relative overflow-hidden border-b-2 border-foreground">
       {/* Geometric backdrop */}
       <GridLines className="absolute inset-0 h-full w-full" />
-      <ClayCircle className="absolute -right-24 -top-24 h-[420px] w-[420px] opacity-95" />
-      <CobaltTriangle className="absolute -bottom-16 left-[8%] h-56 w-56 opacity-90" />
-      <InkSquare className="absolute right-[18%] top-1/2 h-10 w-10 -translate-y-1/2" />
+      <ClayCircle className="pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] opacity-95 sm:block" />
+      <CobaltTriangle className="pointer-events-none absolute -bottom-16 left-[8%] hidden h-56 w-56 opacity-90 sm:block" />
+      <InkSquare className="pointer-events-none absolute right-[18%] top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:block" />
       <GrainOverlay />
 
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-24 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-32">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-32">
         <div className="relative lg:col-span-8">
           <p className="mb-6 inline-block border-2 border-foreground bg-background px-3 py-1 font-display text-xs uppercase tracking-[0.2em]">
             For event organizers
           </p>
-          <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
-            The hardest part of networking
-            <br />
-            isn't talking to people.
-            <br />
+          <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
+            The hardest part of networking isn't talking to people.{" "}
             <span className="text-primary">It's knowing who to talk to.</span>
           </h1>
           <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
@@ -172,15 +170,15 @@ function VillageStory() {
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-foreground text-background">
       {/* big abstract composition */}
-      <div className="absolute -left-32 top-20 h-[520px] w-[520px] rounded-full border-2 border-background/40" />
+      <div className="pointer-events-none absolute -left-32 top-20 hidden h-[520px] w-[520px] rounded-full border-2 border-background/40 sm:block" />
       <div
-        className="pointer-events-none absolute right-[-280px] bottom-[-280px] h-[560px] w-[560px] opacity-80"
+        className="pointer-events-none absolute right-[-280px] bottom-[-280px] hidden h-[560px] w-[560px] opacity-80 sm:block"
         style={{
           background: "var(--primary)",
           borderRadius: "9999px",
         }}
       />
-      <CobaltTriangle className="absolute left-1/2 top-10 h-32 w-32 opacity-90" />
+      <CobaltTriangle className="pointer-events-none absolute left-1/2 top-10 hidden h-32 w-32 opacity-90 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">
@@ -375,8 +373,8 @@ function PricingTeaser() {
 
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-background">
-      <ClayCircle className="absolute -left-20 -bottom-20 h-60 w-60 opacity-90" />
-      <InkSquare className="absolute right-[12%] top-12 h-6 w-6" />
+      <ClayCircle className="pointer-events-none absolute -left-20 -bottom-20 hidden h-60 w-60 opacity-90 sm:block" />
+      <InkSquare className="pointer-events-none absolute right-[12%] top-12 hidden h-6 w-6 sm:block" />
 
       <div className="relative mx-auto max-w-5xl px-6 py-24 lg:px-10 lg:py-28">
         <div className="border-2 border-foreground bg-background p-10 lg:p-14">
@@ -428,8 +426,8 @@ function PricingTeaser() {
 function FinalCTA({ onJoin }: { onJoin: () => void }) {
   return (
     <section className="relative overflow-hidden bg-primary text-primary-foreground">
-      <div className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40" />
-      <CobaltTriangle className="absolute left-[10%] bottom-10 h-40 w-40 opacity-90" />
+      <div className="pointer-events-none absolute -right-32 -top-32 hidden h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40 sm:block" />
+      <CobaltTriangle className="pointer-events-none absolute left-[10%] bottom-10 hidden h-40 w-40 opacity-90 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto max-w-7xl px-6 py-28 text-center lg:px-10 lg:py-36">
