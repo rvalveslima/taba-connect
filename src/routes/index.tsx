@@ -107,11 +107,11 @@ function Hero({ onJoin }: { onJoin: () => void }) {
             <span className="text-primary">It's knowing who to talk to.</span>
           </h1>
           <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
-            Taba shows you{" "}
+            Taba helps you find the people who are{" "}
             <span className="font-semibold text-foreground">
-              what you have in common
+              aligned with where you're headed
             </span>{" "}
-            with someone — before you approach.
+            — so you don't have to guess who's worth approaching.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
