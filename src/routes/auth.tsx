@@ -29,7 +29,14 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(isOrganizer ? ORGANIZER_DEMO_PASSWORD : "");
+  const [password, setPassword] = useState("");
+
+  // Prefill the demo password on the client only (avoids SSR/CSR hydration mismatch).
+  useEffect(() => {
+    if (isOrganizer) {
+      setPassword((prev) => (prev ? prev : ORGANIZER_DEMO_PASSWORD));
+    }
+  }, [isOrganizer]);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
