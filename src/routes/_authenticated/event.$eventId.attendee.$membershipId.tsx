@@ -190,19 +190,24 @@ function DecisionPage() {
     [me, them],
   );
 
-  async function handleConnect() {
-    if (!them) return;
+  const linkedinUrl = useMemo(() => {
+    if (!them?.linkedin_handle) return null;
+    const handle = them.linkedin_handle
+      .replace(/^@/, "")
+      .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, "")
+      .replace(/\/$/, "");
+    return `https://www.linkedin.com/in/${handle}/`;
+  }, [them]);
+
+  async function copyMessage() {
     try {
       await navigator.clipboard.writeText(message);
       toast.success("Message copied — paste in LinkedIn");
     } catch {
-      // ignore
-    }
-    if (them.linkedin_handle) {
-      const handle = them.linkedin_handle.replace(/^@/, "").replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, "").replace(/\/$/, "");
-      window.open(`https://www.linkedin.com/in/${handle}/`, "_blank", "noopener,noreferrer");
+      toast.error("Could not copy");
     }
   }
+
 
   if (!me || !them) {
     return <div className="min-h-screen bg-background p-8 text-sm text-muted-foreground">Loading…</div>;
@@ -359,15 +364,31 @@ function DecisionPage() {
         </section>
 
         {/* CTA */}
-        <button
-          type="button"
-          onClick={handleConnect}
-          className="w-full rounded-full px-6 py-4 text-base font-semibold transition hover:opacity-90"
-          style={{ background: "var(--cobalt)", color: "var(--cobalt-foreground)" }}
-        >
-          {them.linkedin_handle ? `Say hello on LinkedIn` : `Copy message`}
-        </button>
+        {linkedinUrl ? (
+          <a
+            href={linkedinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              void copyMessage();
+            }}
+            className="block w-full rounded-full px-6 py-4 text-center text-base font-semibold transition hover:opacity-90"
+            style={{ background: "var(--cobalt)", color: "var(--cobalt-foreground)" }}
+          >
+            Say hello on LinkedIn
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={copyMessage}
+            className="w-full rounded-full px-6 py-4 text-base font-semibold transition hover:opacity-90"
+            style={{ background: "var(--cobalt)", color: "var(--cobalt-foreground)" }}
+          >
+            Copy message
+          </button>
+        )}
       </main>
     </div>
   );
 }
+

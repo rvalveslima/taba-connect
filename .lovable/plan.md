@@ -1,22 +1,31 @@
-## Fix the join link so it always lands attendees on sign-in
+## Problem
 
-### 1. `src/routes/join.$eventId.tsx`
-- Loader: also select `organizer_account_id` from `events`.
-- On mount, capture the current user's id + email via `supabase.auth.getUser()`.
-- Compute `isOrganizer = sessionUserId === event.organizer_account_id`.
-- Render three states in the right-hand panel:
-  - **Organizer (own link):** banner "You're the organizer of this event. Attendees join with their own account." with two buttons: **Sign out & join as attendee** (calls `supabase.auth.signOut()` then refreshes session state so the New/Existing tabs appear) and **Back to your events** (→ `/organizer`). No "Join the event" button.
-  - **Signed in as a non-organizer:** keep today's one-click "Join the event" flow, plus a small "Use a different account" link that signs out and shows the auth tabs.
-  - **Signed out:** unchanged — "New to Taba" / "I have an account" tabs (default = New, matches the screenshot).
+Clicking "Say hello on LinkedIn" inside the Lovable preview shows `www.linkedin.com refused to connect — ERR_BLOCKED_BY_RESPONSE`. Cause: the current handler uses `window.open(url, "_blank")`, which in a sandboxed preview iframe falls back to navigating the iframe itself. LinkedIn sends `X-Frame-Options: DENY`, so it refuses to render.
 
-### 2. Incognito → Lovable auth prompt
-This happens because the project is not published; `id-preview--…lovable.app` always requires a Lovable login. We'll fix the join flow first; publishing is the last step you mentioned.
+## Fix
+
+Replace the `<button onClick={handleConnect}>` CTA with a real `<a href target="_blank" rel="noopener noreferrer">` styled the same way. Browsers route anchor clicks with `target="_blank"` to a new tab even from sandboxed iframes, bypassing the popup fallback.
+
+### Behavior
+
+1. CTA renders as an anchor when `linkedin_handle` is present:
+   - `href = https://www.linkedin.com/in/{normalizedHandle}/`
+   - `target = "_blank"`, `rel = "noopener noreferrer"`
+   - `onClick` (does NOT call `preventDefault`) copies the suggested message to the clipboard and fires the existing "Message copied — paste in LinkedIn" toast. The navigation proceeds in parallel in a new tab.
+2. On mobile, the same `linkedin.com/in/...` URL is intercepted by the installed LinkedIn app automatically — no extra deep-link scheme needed.
+3. If `linkedin_handle` is missing, keep the current fallback: render as a `<button>` labeled "Copy message" that only copies to clipboard.
+
+### Files
+
+- `src/routes/_authenticated/event.$eventId.attendee.$membershipId.tsx` — swap the CTA element; keep clipboard + toast logic in the `onClick`. No other files change.
 
 ### Out of scope
-No DB changes, no edits to organizer/share/profile/dashboard, no publish yet.
+
+- No new server functions, no LinkedIn API/connector (that's for publishing posts or reading the signed-in user's profile, not for opening someone else's public profile).
+- No profile/onboarding changes — `linkedin_handle` is already collected and normalized.
+- No analytics/click tracking.
 
 ### Verification
-- Organizer opens their own `/join/<id>` → banner, no auto-join.
-- Click "Sign out & join as attendee" → sign-up tabs appear; create new email → profile → dashboard.
-- Different signed-in user → one-click join still works.
-- Logged out → screenshot's sign-up screen.
+
+- In the preview, click the CTA on Alex T.'s card → new browser tab opens at `linkedin.com/in/alex-thompson`, toast says "Message copied".
+- On a card with no LinkedIn handle, CTA reads "Copy message" and only copies.
