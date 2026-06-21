@@ -322,13 +322,29 @@ function DecisionPage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Suggested message
             </p>
-            <button
-              type="button"
-              onClick={() => setEditing((v) => !v)}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              {editing ? "done" : "edit ✎"}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(message);
+                    toast.success("Message copied");
+                  } catch {
+                    toast.error("Could not copy");
+                  }
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                copy ⧉
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing((v) => !v)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                {editing ? "done" : "edit ✎"}
+              </button>
+            </div>
           </div>
           {editing ? (
             <textarea
