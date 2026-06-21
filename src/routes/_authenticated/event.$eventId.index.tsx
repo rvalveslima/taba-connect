@@ -86,11 +86,15 @@ function DashboardPage() {
         navigate({ to: "/join/$eventId", params: { eventId }, replace: true });
         return;
       }
+      const mine = myMem.goal_tags ?? [];
+      if (mine.length === 0) {
+        navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
+        return;
+      }
       setEventName(ev.name);
       setEventCode(ev.event_code ?? null);
       setIsOrganizer(ev.organizer_account_id === userData.user.id);
       setMyName(myAcc?.name ?? "");
-      const mine = myMem.goal_tags ?? [];
       setMyTags(mine);
 
       const mapped: Attendee[] = (rows ?? []).map((r: any) => ({
