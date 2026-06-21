@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 type EventRow = {
@@ -42,16 +43,16 @@ function JoinPage() {
   const { event } = Route.useLoaderData();
   const { eventId } = Route.useParams();
   const navigate = useNavigate();
-  const [authMode, setAuthMode] = useState<"new" | "existing">("new");
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const autoJoinedRef = useRef(false);
 
   async function refreshSession() {
     const { data } = await supabase.auth.getUser();
@@ -95,34 +96,19 @@ function JoinPage() {
     navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
   }
 
-  async function handleNewAccount(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleGoogle() {
     setError(null);
     setBusy(true);
     try {
-      const { data: signUp, error: signErr } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.href,
-          data: { name },
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.href,
       });
-      if (signErr) throw signErr;
-      if (!signUp.session) {
-        // Try immediate sign-in (handles "already registered" or auto-confirm off path).
-        const { error: pwErr } = await supabase.auth.signInWithPassword({ email, password });
-        if (pwErr) throw new Error("Check your email to confirm your account, then come back to this link.");
-      }
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Could not establish a session.");
-      // Make sure name landed on the account (trigger seeds it from metadata).
-      if (name) {
-        await supabase.from("accounts").update({ name }).eq("id", userData.user.id);
-      }
-      await ensureMembershipAndGo(userData.user.id);
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+      // Tokens set directly — auto-join effect will pick it up.
+      await refreshSession();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      const msg = err instanceof Error ? err.message : "Google sign-in failed.";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -130,18 +116,22 @@ function JoinPage() {
     }
   }
 
-  async function handleExisting(e: React.FormEvent) {
+  async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setBusy(true);
     try {
-      const { error: pwErr } = await supabase.auth.signInWithPassword({ email, password });
-      if (pwErr) throw pwErr;
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Could not sign in.");
-      await ensureMembershipAndGo(userData.user.id);
+      const { error: otpErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.href,
+          data: name ? { name } : undefined,
+        },
+      });
+      if (otpErr) throw otpErr;
+      setMagicLinkSent(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sign-in failed.";
+      const msg = err instanceof Error ? err.message : "Could not send magic link.";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -244,106 +234,69 @@ function JoinPage() {
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
 
+          ) : magicLinkSent ? (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Check your inbox</h2>
+              <p className="text-sm text-muted-foreground">
+                We sent a magic link to <span className="font-medium text-foreground">{email}</span>.
+                Open it on this device to finish joining the event.
+              </p>
+              <button
+                onClick={() => { setMagicLinkSent(false); setError(null); }}
+                className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Use a different email
+              </button>
+            </div>
           ) : (
             <>
-              <div className="mb-6 flex gap-1 text-sm">
-                <button
-                  onClick={() => setAuthMode("new")}
-                  className={`rounded-md px-3 py-1.5 font-medium transition ${
-                    authMode === "new"
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  New to Taba
-                </button>
-                <button
-                  onClick={() => setAuthMode("existing")}
-                  className={`rounded-md px-3 py-1.5 font-medium transition ${
-                    authMode === "existing"
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  I have an account
-                </button>
+              <h2 className="mb-2 text-2xl font-semibold">Join this event</h2>
+              <p className="mb-5 text-sm text-muted-foreground">
+                Sign in to claim your spot. We'll set you up in seconds.
+              </p>
+
+              <button
+                onClick={handleGoogle}
+                disabled={busy}
+                className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
+              >
+                Continue with Google
+              </button>
+
+              <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="h-px flex-1 bg-border" />
+                or
+                <div className="h-px flex-1 bg-border" />
               </div>
 
-              {authMode === "new" ? (
-                <form onSubmit={handleNewAccount} className="space-y-3">
-                  <h2 className="mb-2 text-2xl font-semibold">Create your account</h2>
-                  <Field label="Your name">
-                    <input
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="input"
-                      autoComplete="name"
-                    />
-                  </Field>
-                  <Field label="Email">
-                    <input
-                      required
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="input"
-                      autoComplete="email"
-                    />
-                  </Field>
-                  <Field label="Password">
-                    <input
-                      required
-                      type="password"
-                      minLength={6}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input"
-                      autoComplete="new-password"
-                    />
-                  </Field>
-                  {error && <p className="text-sm text-destructive">{error}</p>}
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                  >
-                    {busy ? "Joining…" : "Join the event"}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleExisting} className="space-y-3">
-                  <h2 className="mb-2 text-2xl font-semibold">Sign in to join</h2>
-                  <Field label="Email">
-                    <input
-                      required
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="input"
-                      autoComplete="email"
-                    />
-                  </Field>
-                  <Field label="Password">
-                    <input
-                      required
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="input"
-                      autoComplete="current-password"
-                    />
-                  </Field>
-                  {error && <p className="text-sm text-destructive">{error}</p>}
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                  >
-                    {busy ? "Joining…" : "Sign in & join"}
-                  </button>
-                </form>
-              )}
+              <form onSubmit={handleMagicLink} className="space-y-3">
+                <Field label="Your name (optional)">
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="input"
+                    autoComplete="name"
+                  />
+                </Field>
+                <Field label="Email">
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input"
+                    autoComplete="email"
+                  />
+                </Field>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={busy || !email}
+                  className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Email me a magic link"}
+                </button>
+              </form>
             </>
           )}
         </section>
