@@ -109,15 +109,23 @@ function DecisionPage() {
     if (!me || !them || !body.trim()) return;
     setSending(true);
     try {
-      const { error } = await supabase.from("messages").insert({
-        event_id: eventId,
-        sender_membership_id: me.membership_id,
-        recipient_membership_id: them.membership_id,
-        body: body.trim(),
-      });
+      const { data: inserted, error } = await supabase
+        .from("messages")
+        .insert({
+          event_id: eventId,
+          sender_membership_id: me.membership_id,
+          recipient_membership_id: them.membership_id,
+          body: body.trim(),
+        })
+        .select("id, body, sent_at")
+        .single();
       if (error) throw error;
-      toast.success(`Message sent to ${them.name.split(" ")[0]}`);
-      navigate({ to: "/event/$eventId", params: { eventId } });
+      setThread((prev) => [
+        ...prev,
+        { id: inserted.id, body: inserted.body, sent_at: inserted.sent_at, mine: true },
+      ]);
+      setBody("");
+      toast.success(`Sent to ${them.name.split(" ")[0]}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not send message.");
     } finally {
