@@ -3,7 +3,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type EventRow = { id: string; name: string; date_start: string | null; date_end: string | null };
+type EventRow = {
+  id: string;
+  name: string;
+  date_start: string | null;
+  date_end: string | null;
+  image_url: string | null;
+};
 
 export const Route = createFileRoute("/join/$eventId")({
   head: () => ({
@@ -15,7 +21,7 @@ export const Route = createFileRoute("/join/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, date_start, date_end")
+      .select("id, name, date_start, date_end, image_url")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) {
