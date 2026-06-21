@@ -199,7 +199,29 @@ function JoinPage() {
 
         {/* Right: form */}
         <section className="flex flex-col justify-center p-8">
-          {hasSession === null ? null : hasSession ? (
+          {hasSession === null ? null : isOrganizer ? (
+            <div className="space-y-4">
+              <div className="rounded-md border border-border bg-muted/40 p-4 text-sm">
+                <p className="font-medium text-foreground">You're the organizer of this event.</p>
+                <p className="mt-1 text-muted-foreground">
+                  Attendees join with their own account. Sign out to test the attendee flow, or head back to your events.
+                </p>
+              </div>
+              <button
+                onClick={handleSignOutAndSwitch}
+                disabled={busy}
+                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              >
+                {busy ? "Signing out…" : "Sign out & join as attendee"}
+              </button>
+              <Link
+                to="/organizer"
+                className="block w-full rounded-md border border-border px-4 py-2.5 text-center text-sm font-medium hover:bg-accent"
+              >
+                Back to your events
+              </Link>
+            </div>
+          ) : hasSession ? (
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Join this event</h2>
               <p className="text-sm text-muted-foreground">
@@ -212,8 +234,16 @@ function JoinPage() {
               >
                 {busy ? "Joining…" : "Join the event"}
               </button>
+              <button
+                onClick={handleSignOutAndSwitch}
+                disabled={busy}
+                className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Use a different account
+              </button>
               {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
+
           ) : (
             <>
               <div className="mb-6 flex gap-1 text-sm">
