@@ -14,7 +14,160 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          created_at: string
+          id: string
+          industry: string | null
+          languages: string[] | null
+          linkedin_handle: string | null
+          name: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          languages?: string[] | null
+          linkedin_handle?: string | null
+          name: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          languages?: string[] | null
+          linkedin_handle?: string | null
+          name?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      event_memberships: {
+        Row: {
+          account_id: string
+          event_id: string
+          give_back: string | null
+          goal_tags: string[] | null
+          id: string
+          joined_at: string
+          looking_for: string | null
+          open_to_connect: boolean
+        }
+        Insert: {
+          account_id: string
+          event_id: string
+          give_back?: string | null
+          goal_tags?: string[] | null
+          id?: string
+          joined_at?: string
+          looking_for?: string | null
+          open_to_connect?: boolean
+        }
+        Update: {
+          account_id?: string
+          event_id?: string
+          give_back?: string | null
+          goal_tags?: string[] | null
+          id?: string
+          joined_at?: string
+          looking_for?: string | null
+          open_to_connect?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_memberships_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_memberships_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          date_end: string | null
+          date_start: string | null
+          event_code: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          date_end?: string | null
+          date_start?: string | null
+          event_code: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          date_end?: string | null
+          date_start?: string | null
+          event_code?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          event_id: string
+          id: string
+          recipient_membership_id: string
+          sender_membership_id: string
+          sent_at: string
+        }
+        Insert: {
+          body: string
+          event_id: string
+          id?: string
+          recipient_membership_id: string
+          sender_membership_id: string
+          sent_at?: string
+        }
+        Update: {
+          body?: string
+          event_id?: string
+          id?: string
+          recipient_membership_id?: string
+          sender_membership_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_membership_id_fkey"
+            columns: ["recipient_membership_id"]
+            isOneToOne: false
+            referencedRelation: "event_memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_membership_id_fkey"
+            columns: ["sender_membership_id"]
+            isOneToOne: false
+            referencedRelation: "event_memberships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
