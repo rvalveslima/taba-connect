@@ -16,7 +16,13 @@ type Account = {
   company: string | null;
   location: string | null;
   linkedin_handle: string | null;
+  languages: string[] | null;
 };
+
+const COMMON_LANGUAGES = [
+  "English", "Português", "Español", "Français", "Deutsch", "Italiano",
+  "Nederlands", "中文", "日本語", "한국어", "العربية", "हिन्दी",
+];
 
 type Membership = {
   id: string;
@@ -49,7 +55,7 @@ function ProfilePage() {
         supabase.from("events").select("name").eq("id", eventId).maybeSingle(),
         supabase
           .from("accounts")
-          .select("id, name, role, company, location, linkedin_handle")
+          .select("id, name, role, company, location, linkedin_handle, languages")
           .eq("id", userData.user.id)
           .maybeSingle(),
         supabase
@@ -64,7 +70,11 @@ function ProfilePage() {
         return;
       }
       setEventName(ev.name);
-      setAccount(acc as Account);
+      const accWithLangs = {
+        ...(acc as Account),
+        languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
+      };
+      setAccount(accWithLangs);
       setMembership(mem as Membership);
       setTags(mem.goal_tags ?? []);
       setLookingFor(mem.looking_for ?? "");
@@ -91,6 +101,7 @@ function ProfilePage() {
             company: account.company,
             location: account.location,
             linkedin_handle: account.linkedin_handle,
+            languages: account.languages,
           })
           .eq("id", account.id),
         supabase
@@ -184,6 +195,12 @@ function ProfilePage() {
                   className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground outline-none"
                 />
               </div>
+            </Field>
+            <Field label="Languages">
+              <LanguagesPicker
+                value={account.languages ?? ["English"]}
+                onChange={(langs) => setAccount({ ...account, languages: langs })}
+              />
             </Field>
           </div>
         </section>
@@ -308,5 +325,99 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1.5 block text-xs font-semibold text-foreground/80">{label}</span>
       {children}
     </label>
+  );
+}
+
+function LanguagesPicker({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (langs: string[]) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  function remove(lang: string) {
+    onChange(value.filter((l) => l !== lang));
+  }
+  function add(lang: string) {
+    const v = lang.trim();
+    if (!v || value.includes(v)) return;
+    onChange([...value, v]);
+    setDraft("");
+    setAdding(false);
+  }
+
+  const suggestions = COMMON_LANGUAGES.filter((l) => !value.includes(l));
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        {value.map((lang) => (
+          <span
+            key={lang}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm"
+          >
+            {lang}
+            <button
+              type="button"
+              onClick={() => remove(lang)}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label={`Remove ${lang}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {!adding ? (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="rounded-full border border-dashed border-border px-3 py-1 text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+          >
+            + add
+          </button>
+        ) : (
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                add(draft);
+              } else if (e.key === "Escape") {
+                setDraft("");
+                setAdding(false);
+              }
+            }}
+            onBlur={() => {
+              if (draft.trim()) add(draft);
+              else setAdding(false);
+            }}
+            placeholder="Type a language…"
+            className="rounded-full border border-border bg-background px-3 py-1 text-sm outline-none focus:border-foreground"
+          />
+        )}
+      </div>
+      {adding && suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {suggestions.slice(0, 8).map((s) => (
+            <button
+              type="button"
+              key={s}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                add(s);
+              }}
+              className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground hover:bg-foreground hover:text-background"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
