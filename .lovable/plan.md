@@ -1,48 +1,65 @@
-## Goal
+## How to share the E2E flow without "already logged in" collisions
 
-Make the organizer-shared link/QR fully work: attendee opens it, sees the organizer's event (name, dates, cover image), signs up or signs in, joins that specific event, completes profile, lands on the event dashboard.
+The "already logged in" problem isn't a bug — your browser is signed in as one persona and every route then bypasses sign-in. Two practical ways to share:
 
-## What already exists
+**For non-Lovable testers (recommended):**
+1. Top-right of the editor → **Share → Share preview**. That gives you a 7-day public preview URL that anyone can open without a Lovable login.
+2. Tell each tester to open it in an **Incognito / Private window** (or a fresh browser profile). Each persona = one incognito window. Closing the window wipes the session.
 
-- `/event/$eventId/share` shows the share link + QR after event creation.
-- `/join/$eventId` already loads the event, has new/existing auth tabs, creates an `event_memberships` row scoped to that event, then redirects to `/event/$eventId/profile`.
-- `/event/$eventId/profile` and `/event/$eventId` (dashboard) already exist behind the auth gate.
+**For yourself while testing locally:**
+- Open `/app` → click "Sign out" before switching personas.
+- Or just open a new Incognito window per persona (organizer, attendee A, attendee B).
 
-So the pipes are in place — but two things break the experience today.
+I'll also make the testing surface friendlier so you stop getting trapped (see fix #1 and #2 below).
 
-## Problems to fix
+---
 
-### 1. The join page can't load the event for a logged-out attendee
-`events` currently has only `events_select_authenticated` (authenticated-only SELECT). The join route is public and its loader runs during SSR/anon — the query returns no row and the loader `throw redirect({ to: "/" })`s back to the homepage. The attendee never sees the event.
+## QA scan — what's working
 
-**Fix:** add an anon-readable policy on `events` so the join page can render event details before sign-in. The table only stores non-sensitive fields (name, dates, image_url, event_code, organizer id), so a `TO anon` SELECT policy is safe.
+- Organizer flow: `/` → "Join as organizer" → `/auth?as=organizer` → demo login (`Tabaevent123`) → `/event/new` → image upload → `/event/$eventId/share` with QR + link. ✅
+- Attendee flow: `/join/$eventId` (public, shows event name + dates + cover image) → sign up/in → membership created → `/event/$eventId/profile` → "Find people" → `/event/$eventId` dashboard. ✅
+- Anon SELECT on `events` so logged-out attendees can preview shared links. ✅
+- Membership insert is idempotent (no duplicate rows when the organizer joins their own event). ✅
 
-```sql
-GRANT SELECT ON public.events TO anon;
-CREATE POLICY events_select_anon ON public.events FOR SELECT TO anon USING (true);
-```
+## QA scan — bugs and rough edges to fix
 
-### 2. The join page doesn't show the organizer's cover image
-The loader doesn't select `image_url` and the UI doesn't render it, so the page feels generic instead of "this is TechForward 2026". Add `image_url` to the loader select and render it on the left/intro panel (with a graceful fallback to the current solid-color panel when no image was uploaded).
+### 1. Stale session hijacks the organizer flow
+On `/auth?as=organizer`, the `useEffect` calls `getUser()` and, if any user is signed in, immediately redirects to `/event/new` — bypassing the demo login. So a tester signed in as an attendee who clicks "Join as organizer" silently becomes an organizer with their attendee account. Fix: when `as=organizer` and the current session's email doesn't match what they're about to type, surface a "You're signed in as X — sign out to continue as organizer" banner with a one-click sign-out, instead of auto-redirecting.
 
-## Flow after the fix
+### 2. No way to switch accounts from `/auth`
+Testers landing on `/auth` who are already signed in get bounced before they can sign in as someone else. Fix: add a small "Signed in as X — sign out" link at the top of `/auth` whenever a session exists, so personas can be swapped without hunting for `/app`.
 
-1. Organizer creates event → `/event/$eventId/share` (already done).
-2. Attendee opens `https://…/join/<eventId>` or scans the QR.
-3. Public join page renders organizer's event name, dates, and cover image.
-4. Attendee signs up (or signs in if returning) — `event_memberships` row created for that event, idempotent.
-5. Redirect to `/event/$eventId/profile` to fill name/role/goals/etc.
-6. Profile save continues to `/event/$eventId` dashboard (existing behavior).
+### 3. `/auth` hydration warning in the console
+React logs `Hydration failed … <AuthPage> vs <Suspense>` on every visit to `/auth`. Root cause: the route is `ssr: false`, so the server emits the suspense fallback and the client mounts the real component — TanStack's pending component contract triggers the warning. Cosmetic only (page works), but it pollutes the error overlay during testing. Fix: set an explicit `pendingComponent: () => null` on the `/auth` route so server and client agree on the initial markup.
 
-## Files touched
+### 4. `/app` "Loading…" can hang if the session is gone
+In `src/routes/_authenticated/app.tsx`, `setLoading(false)` only runs after the membership query, but the early return on no user leaves `loading` permanently true. The `_authenticated` gate normally redirects first, but on a soft sign-out the dashboard can briefly stick on "Loading…". Fix: move `setLoading(false)` into a `finally`.
 
-- New migration: anon SELECT policy + GRANT on `public.events`.
-- `src/routes/join.$eventId.tsx`: add `image_url` to loader select; render the cover image in the left panel when present.
+### 5. Unused `DEMO_EVENT_ID` constant in `/app`
+`const DEMO_EVENT_ID = "…"` and `ACTIVE_WINDOW_MS` are declared and never used. Dead code — remove.
 
-No changes to the organizer flow, profile page, dashboard, or auth wiring.
+### 6. Profile page redirects logged-in attendee back to `/join/$eventId`
+On `/event/$eventId/profile`, if the membership query returns nothing (RLS hiccup or stale data), the page redirects to `/join/$eventId` — which then sees an existing membership and bounces back to `/profile`. Potential redirect loop. Fix: when the redirect target would be the join page for an event the user already belongs to, send them to `/app` with a toast instead.
+
+### 7. Join-by-code uses `ilike` without escaping
+`/app` joins by code via `.ilike("event_code", trimmed)`. If a tester pastes a code with `%` or `_`, it becomes a wildcard. Low risk for the demo, but worth switching to `eq()` with `.toUpperCase()` since codes are uppercase A-Z/2-9.
+
+### 8. Mobile QR + share panel polish
+On `/event/$eventId/share` the QR canvas is fixed 180px and sits next to the URL input; on very narrow screens the layout already stacks, but the copy button can wrap awkwardly. Minor — confirm on a 360px viewport.
+
+---
+
+## What I'll change in build mode
+
+- `src/routes/auth.tsx`: drop the unconditional auto-redirect on existing session; render a "Signed in as … sign out" banner at the top (both organizer and attendee modes); add `pendingComponent: () => null` to the route to silence the hydration warning.
+- `src/routes/_authenticated/app.tsx`: `try/finally` on `setLoading`, remove the unused `DEMO_EVENT_ID` and `ACTIVE_WINDOW_MS`, switch join-by-code to `eq` + `.toUpperCase()`.
+- `src/routes/_authenticated/event.$eventId.profile.tsx`: if membership is missing, redirect to `/app` with a toast instead of `/join/$eventId`.
+
+No DB changes. No design changes. Nothing else touched.
 
 ## Verification
 
-- Open the share link in an incognito window → join page shows the event name, date, and uploaded image.
-- Complete signup → land on the profile page for that event → save → land on that event's dashboard.
-- Re-open the same link while already signed in → "Join the event" one-click path still works.
+1. Incognito window → open share link → sign up as attendee → land on profile → save → land on dashboard.
+2. In the same window click "Sign out" on `/app` → land on `/auth` → "Signed in as" banner is gone → sign in as a different email → land on `/app` clean.
+3. While signed in as an attendee, click "Join as organizer" on `/` → land on `/auth?as=organizer` and see the "Signed in as X — sign out" banner (no silent redirect to `/event/new`).
+4. Refresh `/auth` → no React hydration warning in the console.

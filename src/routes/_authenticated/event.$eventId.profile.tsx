@@ -69,8 +69,14 @@ function ProfilePage() {
           .eq("account_id", userData.user.id)
           .maybeSingle(),
       ]);
-      if (!ev || !mem) {
-        navigate({ to: "/join/$eventId", params: { eventId }, replace: true });
+      if (!ev) {
+        toast.error("That event doesn't exist or is no longer available.");
+        navigate({ to: "/app", replace: true });
+        return;
+      }
+      if (!mem) {
+        toast.error("You're not a member of this event yet.");
+        navigate({ to: "/app", replace: true });
         return;
       }
       setEventName(ev.name);
