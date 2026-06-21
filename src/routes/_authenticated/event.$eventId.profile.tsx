@@ -70,7 +70,11 @@ function ProfilePage() {
         return;
       }
       setEventName(ev.name);
-      setAccount(acc as Account);
+      const accWithLangs = {
+        ...(acc as Account),
+        languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
+      };
+      setAccount(accWithLangs);
       setMembership(mem as Membership);
       setTags(mem.goal_tags ?? []);
       setLookingFor(mem.looking_for ?? "");
