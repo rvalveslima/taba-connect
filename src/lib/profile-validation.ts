@@ -13,9 +13,9 @@ export const profileSchema = z.object({
   linkedin_handle: z.preprocess(trim, z.string().max(200).optional().nullable()),
   languages: z.array(z.string().trim().min(1).max(40)).max(20, "Too many languages"),
   goal_tags: z
-    .array(z.string())
-    .max(INTEREST_TAGS.length)
-    .refine((arr) => arr.every((t) => allowedTags.has(t)), "Unknown goal tag"),
+    .array(z.string().trim().min(1, "Tag is empty").max(40, "Tag is too long"))
+    .max(30, "Too many tags"),
+
   looking_for: z.preprocess(trim, z.string().max(500, "Keep it under 500 characters").optional().nullable()),
   give_back: z.preprocess(trim, z.string().max(500, "Keep it under 500 characters").optional().nullable()),
 });
