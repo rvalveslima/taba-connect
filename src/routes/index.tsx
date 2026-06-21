@@ -373,8 +373,8 @@ function PricingTeaser() {
 
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-background">
-      <ClayCircle className="absolute -left-20 -bottom-20 h-60 w-60 opacity-90" />
-      <InkSquare className="absolute right-[12%] top-12 h-6 w-6" />
+      <ClayCircle className="pointer-events-none absolute -left-20 -bottom-20 hidden h-60 w-60 opacity-90 sm:block" />
+      <InkSquare className="pointer-events-none absolute right-[12%] top-12 hidden h-6 w-6 sm:block" />
 
       <div className="relative mx-auto max-w-5xl px-6 py-24 lg:px-10 lg:py-28">
         <div className="border-2 border-foreground bg-background p-10 lg:p-14">
