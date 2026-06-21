@@ -45,12 +45,25 @@ function AuthPage() {
 
   const postAuthTarget = isOrganizer ? "/event/new" : "/app";
 
-  // If already signed in, send to home (or event creation in organizer flow).
+  // Track currently signed-in user (if any) so testers can switch accounts
+  // without being silently redirected away from the sign-in form.
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: postAuthTarget, replace: true });
+      setCurrentEmail(data.user?.email ?? null);
     });
-  }, [navigate, postAuthTarget]);
+  }, []);
+
+  async function handleSwitchAccount() {
+    await supabase.auth.signOut();
+    setCurrentEmail(null);
+    setInfo(null);
+    setError(null);
+  }
+
+  function handleContinueAsCurrent() {
+    navigate({ to: postAuthTarget, replace: true });
+  }
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
