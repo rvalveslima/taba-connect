@@ -90,6 +90,18 @@ function ProfilePage() {
   function toggleTag(t: string) {
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   }
+  function addCustomTag(raw: string) {
+    const v = raw.trim().slice(0, 40);
+    if (!v) {
+      setAddingTag(false);
+      setTagDraft("");
+      return;
+    }
+    setTags((prev) => (prev.some((x) => x.toLowerCase() === v.toLowerCase()) ? prev : [...prev, v]));
+    setTagDraft("");
+    setAddingTag(false);
+  }
+
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
