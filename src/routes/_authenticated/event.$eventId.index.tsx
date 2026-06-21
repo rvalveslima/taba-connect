@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { overlapTags } from "@/lib/interest-tags";
+import { overlapTags, INTEREST_TAGS } from "@/lib/interest-tags";
+import { SharePanel } from "@/components/share-panel";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/")({
   head: () => ({ meta: [{ title: "Attendees — Taba" }] }),
@@ -13,7 +14,9 @@ type Attendee = {
   account_id: string;
   name: string;
   role: string | null;
+  company: string | null;
   industry: string | null;
+  languages: string[];
   tags: string[];
   open_to_connect: boolean;
   overlap: string[];
@@ -23,6 +26,8 @@ function DashboardPage() {
   const { eventId } = Route.useParams();
   const navigate = useNavigate();
   const [eventName, setEventName] = useState("");
+  const [eventCode, setEventCode] = useState<string | null>(null);
+  const [isOrganizer, setIsOrganizer] = useState(false);
   const [myTags, setMyTags] = useState<string[]>([]);
   const [myName, setMyName] = useState<string>("");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
@@ -30,7 +35,10 @@ function DashboardPage() {
 
   // filters
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [languageFilter, setLanguageFilter] = useState<string>("all");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [goalFilters, setGoalFilters] = useState<string[]>([]);
+  const [openOnly, setOpenOnly] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -39,7 +47,7 @@ function DashboardPage() {
       if (!userData.user) return;
 
       const [{ data: ev }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
-        supabase.from("events").select("name").eq("id", eventId).maybeSingle(),
+        supabase.from("events").select("name, event_code, organizer_account_id").eq("id", eventId).maybeSingle(),
         supabase.from("accounts").select("name").eq("id", userData.user.id).maybeSingle(),
         supabase
           .from("event_memberships")
@@ -49,7 +57,7 @@ function DashboardPage() {
           .maybeSingle(),
         supabase
           .from("event_memberships")
-          .select("id, account_id, goal_tags, open_to_connect, accounts!inner(name, role, industry)")
+          .select("id, account_id, goal_tags, open_to_connect, accounts!inner(name, role, company, industry, languages)")
           .eq("event_id", eventId)
           .neq("account_id", userData.user.id),
       ]);
@@ -59,6 +67,8 @@ function DashboardPage() {
         return;
       }
       setEventName(ev.name);
+      setEventCode(ev.event_code ?? null);
+      setIsOrganizer(ev.organizer_account_id === userData.user.id);
       setMyName(myAcc?.name ?? "");
       const mine = myMem.goal_tags ?? [];
       setMyTags(mine);
@@ -68,7 +78,9 @@ function DashboardPage() {
         account_id: r.account_id,
         name: r.accounts?.name ?? "Someone",
         role: r.accounts?.role ?? null,
+        company: r.accounts?.company ?? null,
         industry: r.accounts?.industry ?? null,
+        languages: r.accounts?.languages ?? [],
         tags: r.goal_tags ?? [],
         open_to_connect: r.open_to_connect,
         overlap: overlapTags(mine, r.goal_tags ?? []),
@@ -78,30 +90,49 @@ function DashboardPage() {
     })();
   }, [eventId, navigate]);
 
-  const roleOptions = useMemo(() => {
-    const set = new Set<string>();
-    attendees.forEach((a) => {
-      if (a.role && a.role.trim()) set.add(a.role.trim());
-    });
-    return Array.from(set).sort();
+  const roleOptions = useMemo(
+    () => Array.from(new Set(attendees.map((a) => a.role).filter((v): v is string => !!v?.trim()))).sort(),
+    [attendees],
+  );
+  const languageOptions = useMemo(
+    () => Array.from(new Set(attendees.flatMap((a) => a.languages))).sort(),
+    [attendees],
+  );
+  const companyOptions = useMemo(
+    () => Array.from(new Set(attendees.map((a) => a.company).filter((v): v is string => !!v?.trim()))).sort(),
+    [attendees],
+  );
+  const goalOptions = useMemo(() => {
+    const present = new Set(attendees.flatMap((a) => a.tags));
+    return INTEREST_TAGS.filter((t) => present.has(t));
   }, [attendees]);
 
-  const allTags = useMemo(() => {
-    const set = new Set<string>();
-    attendees.forEach((a) => a.tags.forEach((t) => set.add(t)));
-    return Array.from(set).sort();
-  }, [attendees]);
+  const anyFilter =
+    roleFilter !== "all" || languageFilter !== "all" || companyFilter !== "all" || goalFilters.length > 0 || openOnly;
 
   const visible = useMemo(() => {
     let v = attendees;
     if (roleFilter !== "all") v = v.filter((a) => (a.role ?? "").trim() === roleFilter);
-    if (tagFilter) v = v.filter((a) => a.tags.includes(tagFilter));
-    // overlap-sort: most shared tags first; secondary sort by name for stable order
+    if (languageFilter !== "all") v = v.filter((a) => a.languages.includes(languageFilter));
+    if (companyFilter !== "all") v = v.filter((a) => (a.company ?? "").trim() === companyFilter);
+    if (goalFilters.length > 0) v = v.filter((a) => goalFilters.every((g) => a.tags.includes(g)));
+    if (openOnly) v = v.filter((a) => a.open_to_connect);
     return [...v].sort((a, b) => {
       if (b.overlap.length !== a.overlap.length) return b.overlap.length - a.overlap.length;
       return a.name.localeCompare(b.name);
     });
-  }, [attendees, roleFilter, tagFilter]);
+  }, [attendees, roleFilter, languageFilter, companyFilter, goalFilters, openOnly]);
+
+  function toggleGoal(g: string) {
+    setGoalFilters((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
+  }
+  function clearFilters() {
+    setRoleFilter("all");
+    setLanguageFilter("all");
+    setCompanyFilter("all");
+    setGoalFilters([]);
+    setOpenOnly(false);
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,48 +155,58 @@ function DashboardPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        {/* Filters */}
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <label className="text-sm text-muted-foreground">Role</label>
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
-          >
-            <option value="all">All roles</option>
-            {roleOptions.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+      <div className="mx-auto max-w-6xl px-6 py-8 space-y-6">
+        {isOrganizer && <SharePanel eventId={eventId} eventCode={eventCode} />}
 
-          <span className="ml-2 text-sm text-muted-foreground">Tag</span>
-          <div className="flex flex-wrap gap-1">
-            {tagFilter && (
-              <button
-                onClick={() => setTagFilter(null)}
-                className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background"
-              >
-                {tagFilter} ✕
+        {/* Filters */}
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Select label="Role" value={roleFilter} onChange={setRoleFilter} options={roleOptions} />
+            <Select label="Language" value={languageFilter} onChange={setLanguageFilter} options={languageOptions} />
+            <Select label="Company" value={companyFilter} onChange={setCompanyFilter} options={companyOptions} />
+
+            <label className="ml-auto flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={openOnly}
+                onChange={(e) => setOpenOnly(e.target.checked)}
+                className="h-4 w-4 accent-[color:var(--primary)]"
+              />
+              Open to connect
+            </label>
+
+            {anyFilter && (
+              <button onClick={clearFilters} className="text-xs text-muted-foreground underline hover:text-foreground">
+                Clear filters
               </button>
             )}
-            {!tagFilter &&
-              allTags.slice(0, 8).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTagFilter(t)}
-                  className="rounded-full border border-border bg-background px-3 py-1 text-xs hover:border-foreground"
-                >
-                  {t}
-                </button>
-              ))}
           </div>
 
-          <span className="ml-auto text-xs text-muted-foreground">
-            Sorted by shared tags with you ({myTags.length} on your profile)
-          </span>
+          {goalOptions.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-xs text-muted-foreground">Goals</span>
+              {goalOptions.map((g) => {
+                const on = goalFilters.includes(g);
+                return (
+                  <button
+                    key={g}
+                    onClick={() => toggleGoal(g)}
+                    className={`rounded-full border px-2.5 py-0.5 text-xs transition ${
+                      on
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background hover:border-foreground"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="mt-3 text-xs text-muted-foreground">
+            Sorted by shared goals with you ({myTags.length} on your profile)
+          </p>
         </div>
 
         {loading ? (
@@ -173,7 +214,9 @@ function DashboardPage() {
         ) : visible.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
             <p className="text-sm text-muted-foreground">
-              No other attendees match this filter yet. Try clearing filters, or share the event link.
+              {anyFilter
+                ? "No attendees match these filters."
+                : "No other attendees yet. Share the event link above."}
             </p>
           </div>
         ) : (
@@ -189,7 +232,7 @@ function DashboardPage() {
                     <div>
                       <h3 className="text-lg font-semibold leading-tight">{a.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {[a.role, a.industry].filter(Boolean).join(" · ") || "—"}
+                        {[a.role, a.company].filter(Boolean).join(" · ") || "—"}
                       </p>
                     </div>
                     {a.open_to_connect && (
@@ -220,23 +263,11 @@ function DashboardPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-4 text-xs text-muted-foreground">No shared tags yet.</p>
+                    <p className="mt-4 text-xs text-muted-foreground">No shared goals yet.</p>
                   )}
 
-                  {a.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {a.tags
-                        .filter((t) => !a.overlap.includes(t))
-                        .slice(0, 4)
-                        .map((t) => (
-                          <span
-                            key={t}
-                            className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                    </div>
+                  {a.languages.length > 0 && (
+                    <p className="mt-3 text-xs text-muted-foreground">{a.languages.join(" · ")}</p>
                   )}
                 </Link>
               </li>
@@ -245,5 +276,35 @@ function DashboardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+      >
+        <option value="all">All</option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
