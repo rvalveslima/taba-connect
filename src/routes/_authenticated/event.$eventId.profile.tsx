@@ -101,6 +101,7 @@ function ProfilePage() {
             company: account.company,
             location: account.location,
             linkedin_handle: account.linkedin_handle,
+            languages: account.languages,
           })
           .eq("id", account.id),
         supabase
