@@ -196,20 +196,34 @@ function AuthPage() {
             <TabaLogo height={32} />
           </Link>
           <h1 className="mt-4 text-2xl font-semibold">
-            {mode === "sign-in" ? "Sign in" : "Create your account"}
+            {isOrganizer
+              ? "Organizer sign in"
+              : mode === "sign-in"
+                ? "Sign in"
+                : "Create your account"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "sign-in"
-              ? "Welcome back to your village."
-              : "Start building your village."}
+            {isOrganizer
+              ? "Sign in to create your event."
+              : mode === "sign-in"
+                ? "Welcome back to your village."
+                : "Start building your village."}
           </p>
         </div>
+
+        {isOrganizer && (
+          <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
+            Demo access — use any email with password{" "}
+            <span className="font-mono font-semibold">Tabaevent123</span>.
+          </div>
+        )}
 
         {info && (
           <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
             {info}
           </div>
         )}
+
 
         <button
           onClick={handleGoogle}
