@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { INTEREST_TAGS } from "@/lib/interest-tags";
 import { toast } from "sonner";
+import { TabaLogo } from "@/components/taba-logo";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/profile")({
   head: () => ({ meta: [{ title: "Your profile — Taba" }] }),
@@ -136,7 +137,7 @@ function ProfilePage() {
           <Link to="/event/$eventId" params={{ eventId }} className="text-sm text-muted-foreground hover:underline">
             ← {eventName || "Back"}
           </Link>
-          <span className="font-heading text-sm font-semibold">taba</span>
+          <TabaLogo height={24} />
         </div>
       </header>
 

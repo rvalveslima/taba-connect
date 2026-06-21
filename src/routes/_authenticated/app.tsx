@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TabaLogo } from "@/components/taba-logo";
 
 const DEMO_EVENT_ID = "2bb9c0d4-1f73-4a89-9232-9eb65c2b99bf";
 
@@ -80,7 +81,7 @@ function AppHome() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-semibold">Taba</h1>
+          <TabaLogo height={28} />
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground">{email}</span>
             <button onClick={handleSignOut} className="rounded-md border border-border bg-background px-3 py-1.5 hover:bg-accent">

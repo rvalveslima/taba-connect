@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { TabaLogo } from "@/components/taba-logo";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -81,8 +82,8 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <Link to="/" className="text-sm text-muted-foreground hover:underline">
-            ← Taba
+          <Link to="/" className="inline-flex items-center justify-center">
+            <TabaLogo height={32} />
           </Link>
           <h1 className="mt-4 text-2xl font-semibold">
             {mode === "sign-in" ? "Sign in" : "Create your account"}
