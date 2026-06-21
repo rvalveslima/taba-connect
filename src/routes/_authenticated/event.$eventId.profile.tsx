@@ -321,9 +321,11 @@ function ProfilePage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full rounded-full bg-foreground px-6 py-3.5 text-base font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
+            aria-label="Save profile and find people"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-base font-semibold text-[var(--background)] transition hover:opacity-90 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Find people →"}
+            <span>{saving ? "Saving…" : "Find people"}</span>
+            {!saving && <span aria-hidden="true">→</span>}
           </button>
         </div>
       </div>
