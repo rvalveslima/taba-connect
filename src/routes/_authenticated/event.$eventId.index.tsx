@@ -68,12 +68,35 @@ function DashboardPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // filters
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [languageFilter, setLanguageFilter] = useState<string>("all");
-  const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [goalFilter, setGoalFilter] = useState<string>("all");
-  const [openOnly, setOpenOnly] = useState(false);
+  // filters — backed by URL search params
+  const search = Route.useSearch();
+  const roleFilter = search.role ?? "all";
+  const languageFilter = search.language ?? "all";
+  const companyFilter = search.company ?? "all";
+  const goalFilter = search.goal ?? "all";
+  const openOnly = search.open === true;
+
+  function setSearchParam(key: keyof DashboardSearch, value: string | boolean | undefined) {
+    navigate({
+      to: "/event/$eventId",
+      params: { eventId },
+      search: (prev) => {
+        const next = { ...prev } as DashboardSearch;
+        if (value === undefined || value === "all" || value === false) {
+          delete next[key];
+        } else {
+          (next as any)[key] = value;
+        }
+        return next;
+      },
+      replace: true,
+    });
+  }
+  const setRoleFilter = (v: string) => setSearchParam("role", v);
+  const setLanguageFilter = (v: string) => setSearchParam("language", v);
+  const setCompanyFilter = (v: string) => setSearchParam("company", v);
+  const setGoalFilter = (v: string) => setSearchParam("goal", v);
+  const setOpenOnly = (v: boolean) => setSearchParam("open", v);
 
   useEffect(() => {
     (async () => {
