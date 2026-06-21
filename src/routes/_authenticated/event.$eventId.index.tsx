@@ -5,8 +5,23 @@ import { overlapTags, INTEREST_TAGS } from "@/lib/interest-tags";
 import { SharePanel } from "@/components/share-panel";
 import { TabaLogo } from "@/components/taba-logo";
 
+type DashboardSearch = {
+  role?: string;
+  company?: string;
+  goal?: string;
+  language?: string;
+  open?: boolean;
+};
+
 export const Route = createFileRoute("/_authenticated/event/$eventId/")({
   head: () => ({ meta: [{ title: "Attendees — Taba" }] }),
+  validateSearch: (search: Record<string, unknown>): DashboardSearch => ({
+    role: typeof search.role === "string" ? search.role : undefined,
+    company: typeof search.company === "string" ? search.company : undefined,
+    goal: typeof search.goal === "string" ? search.goal : undefined,
+    language: typeof search.language === "string" ? search.language : undefined,
+    open: search.open === true || search.open === "true" ? true : undefined,
+  }),
   component: DashboardPage,
 });
 
