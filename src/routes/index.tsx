@@ -140,26 +140,38 @@ function Problem() {
             01 — The problem
           </p>
           <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-            The wall of business cards just went digital.
+            You don't need more people to meet.
+            <br />
+            <span className="text-primary">
+              You need to know who's worth talking to.
+            </span>
           </h2>
         </div>
         <div className="space-y-8 lg:col-span-7 lg:pt-2">
           <p className="text-xl leading-relaxed text-foreground/85">
-            Your attendees end the event with a camera roll of QR codes and a
-            LinkedIn inbox full of strangers. No filter, no context, no reason
-            to follow up on Monday.
+            90% of people say they've walked past a great connection at an
+            event — and never even knew it.
           </p>
           <InkRule />
           <p className="text-xl leading-relaxed text-foreground/85">
-            Two weeks later, nothing has happened. The room was full of people
-            they should have met — and they walked right past each other,
-            because there was no way to tell who was who.
+            In person, you're scanning a room full of strangers with no way to
+            tell who's open to connect, or who's actually working toward
+            something like what you are. Online, it's worse: a hundred LinkedIn
+            links land in your inbox with zero context — no way to filter
+            who's actually worth a conversation.
+          </p>
+          <p className="text-xl leading-relaxed text-foreground">
+            The room is never the problem.{" "}
+            <span className="font-semibold text-primary">
+              Not knowing who's standing in it is.
+            </span>
           </p>
         </div>
       </div>
     </section>
   );
 }
+
 
 /* ---------------- VILLAGE STORY ---------------- */
 
