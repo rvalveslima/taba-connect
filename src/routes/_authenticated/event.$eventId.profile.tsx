@@ -41,6 +41,8 @@ function ProfilePage() {
   const [account, setAccount] = useState<Account | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [addingTag, setAddingTag] = useState(false);
+  const [tagDraft, setTagDraft] = useState("");
   const [lookingFor, setLookingFor] = useState("");
   const [giveBack, setGiveBack] = useState("");
   const [openToConnect, setOpenToConnect] = useState(true);
@@ -88,6 +90,18 @@ function ProfilePage() {
   function toggleTag(t: string) {
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   }
+  function addCustomTag(raw: string) {
+    const v = raw.trim().slice(0, 40);
+    if (!v) {
+      setAddingTag(false);
+      setTagDraft("");
+      return;
+    }
+    setTags((prev) => (prev.some((x) => x.toLowerCase() === v.toLowerCase()) ? prev : [...prev, v]));
+    setTagDraft("");
+    setAddingTag(false);
+  }
+
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -265,6 +279,52 @@ function ProfilePage() {
                     </button>
                   );
                 })}
+                {tags
+                  .filter((t) => !(INTEREST_TAGS as readonly string[]).includes(t))
+                  .map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+                    >
+                      {t}
+                      <button
+                        type="button"
+                        onClick={() => toggleTag(t)}
+                        className="opacity-80 hover:opacity-100"
+                        aria-label={`Remove ${t}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                {!addingTag ? (
+                  <button
+                    type="button"
+                    onClick={() => setAddingTag(true)}
+                    className="rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+                  >
+                    + add
+                  </button>
+                ) : (
+                  <input
+                    autoFocus
+                    value={tagDraft}
+                    onChange={(e) => setTagDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addCustomTag(tagDraft);
+                      } else if (e.key === "Escape") {
+                        setTagDraft("");
+                        setAddingTag(false);
+                      }
+                    }}
+                    onBlur={() => addCustomTag(tagDraft)}
+                    placeholder="Type a goal…"
+                    maxLength={40}
+                    className="rounded-full border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-foreground"
+                  />
+                )}
               </div>
               {tags.length < 3 && (
                 <p className="mt-2 text-xs text-muted-foreground">Pick 3+ for better matches.</p>
