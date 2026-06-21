@@ -3,7 +3,7 @@ import { INTEREST_TAGS } from "./interest-tags";
 
 const trim = (s: unknown) => (typeof s === "string" ? s.trim() : s);
 
-const allowedTags = new Set<string>(INTEREST_TAGS);
+
 
 export const profileSchema = z.object({
   name: z.preprocess(trim, z.string().min(1, "Name is required").max(100, "Name is too long")),
