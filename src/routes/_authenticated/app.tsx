@@ -32,28 +32,31 @@ function AppHome() {
 
   useEffect(() => {
     (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      setEmail(userData.user?.email ?? null);
-      if (!userData.user) return;
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        setEmail(userData.user?.email ?? null);
+        if (!userData.user) return;
 
-      const { data } = await supabase
-        .from("event_memberships")
-        .select("id, event_id, goal_tags, joined_at, events!inner(name, date_start, date_end)")
-        .eq("account_id", userData.user.id)
-        .order("joined_at", { ascending: false });
+        const { data } = await supabase
+          .from("event_memberships")
+          .select("id, event_id, goal_tags, joined_at, events!inner(name, date_start, date_end)")
+          .eq("account_id", userData.user.id)
+          .order("joined_at", { ascending: false });
 
-      setRows(
-        (data ?? []).map((r: any) => ({
-          membership_id: r.id,
-          event_id: r.event_id,
-          event_name: r.events?.name ?? "Event",
-          date_start: r.events?.date_start ?? null,
-          date_end: r.events?.date_end ?? null,
-          joined_at: r.joined_at,
-          profile_complete: Array.isArray(r.goal_tags) && r.goal_tags.length > 0,
-        })),
-      );
-      setLoading(false);
+        setRows(
+          (data ?? []).map((r: any) => ({
+            membership_id: r.id,
+            event_id: r.event_id,
+            event_name: r.events?.name ?? "Event",
+            date_start: r.events?.date_start ?? null,
+            date_end: r.events?.date_end ?? null,
+            joined_at: r.joined_at,
+            profile_complete: Array.isArray(r.goal_tags) && r.goal_tags.length > 0,
+          })),
+        );
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
