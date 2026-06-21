@@ -196,6 +196,12 @@ function ProfilePage() {
                 />
               </div>
             </Field>
+            <Field label="Languages">
+              <LanguagesPicker
+                value={account.languages ?? ["English"]}
+                onChange={(langs) => setAccount({ ...account, languages: langs })}
+              />
+            </Field>
           </div>
         </section>
 
