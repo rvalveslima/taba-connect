@@ -55,7 +55,7 @@ function ProfilePage() {
         supabase.from("events").select("name").eq("id", eventId).maybeSingle(),
         supabase
           .from("accounts")
-          .select("id, name, role, company, location, linkedin_handle")
+          .select("id, name, role, company, location, linkedin_handle, languages")
           .eq("id", userData.user.id)
           .maybeSingle(),
         supabase
