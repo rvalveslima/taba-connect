@@ -45,6 +45,7 @@ function JoinPage() {
   const [authMode, setAuthMode] = useState<"new" | "existing">("new");
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,12 +53,29 @@ function JoinPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function refreshSession() {
+    const { data } = await supabase.auth.getUser();
+    setHasSession(!!data.user);
+    setSessionEmail(data.user?.email ?? null);
+    setSessionUserId(data.user?.id ?? null);
+  }
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setHasSession(!!data.user);
-      setSessionEmail(data.user?.email ?? null);
-    });
+    refreshSession();
   }, []);
+
+  async function handleSignOutAndSwitch() {
+    setBusy(true);
+    try {
+      await supabase.auth.signOut();
+      await refreshSession();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const isOrganizer = !!sessionUserId && sessionUserId === event.organizer_account_id;
+
 
   async function ensureMembershipAndGo(accountId: string) {
     // Idempotent: if a membership already exists for (account, event), just continue.
