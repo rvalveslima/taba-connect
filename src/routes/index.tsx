@@ -170,15 +170,15 @@ function VillageStory() {
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-foreground text-background">
       {/* big abstract composition */}
-      <div className="absolute -left-32 top-20 h-[520px] w-[520px] rounded-full border-2 border-background/40" />
+      <div className="pointer-events-none absolute -left-32 top-20 hidden h-[520px] w-[520px] rounded-full border-2 border-background/40 sm:block" />
       <div
-        className="pointer-events-none absolute right-[-280px] bottom-[-280px] h-[560px] w-[560px] opacity-80"
+        className="pointer-events-none absolute right-[-280px] bottom-[-280px] hidden h-[560px] w-[560px] opacity-80 sm:block"
         style={{
           background: "var(--primary)",
           borderRadius: "9999px",
         }}
       />
-      <CobaltTriangle className="absolute left-1/2 top-10 h-32 w-32 opacity-90" />
+      <CobaltTriangle className="pointer-events-none absolute left-1/2 top-10 hidden h-32 w-32 opacity-90 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">
