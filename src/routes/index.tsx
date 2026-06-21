@@ -426,8 +426,8 @@ function PricingTeaser() {
 function FinalCTA({ onJoin }: { onJoin: () => void }) {
   return (
     <section className="relative overflow-hidden bg-primary text-primary-foreground">
-      <div className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40" />
-      <CobaltTriangle className="absolute left-[10%] bottom-10 h-40 w-40 opacity-90" />
+      <div className="pointer-events-none absolute -right-32 -top-32 hidden h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40 sm:block" />
+      <CobaltTriangle className="pointer-events-none absolute left-[10%] bottom-10 hidden h-40 w-40 opacity-90 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto max-w-7xl px-6 py-28 text-center lg:px-10 lg:py-36">
