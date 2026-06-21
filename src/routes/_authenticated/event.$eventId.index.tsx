@@ -150,7 +150,7 @@ function DashboardPage() {
       <header className="border-b border-border/60 bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-3">
           <Link to="/app">
-            <TabaLogo height={22} />
+            <TabaLogo height={44} />
           </Link>
           <div className="flex items-center gap-3 text-xs">
             <Link
