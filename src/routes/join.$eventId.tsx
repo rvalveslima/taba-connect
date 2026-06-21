@@ -96,34 +96,19 @@ function JoinPage() {
     navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
   }
 
-  async function handleNewAccount(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleGoogle() {
     setError(null);
     setBusy(true);
     try {
-      const { data: signUp, error: signErr } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.href,
-          data: { name },
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.href,
       });
-      if (signErr) throw signErr;
-      if (!signUp.session) {
-        // Try immediate sign-in (handles "already registered" or auto-confirm off path).
-        const { error: pwErr } = await supabase.auth.signInWithPassword({ email, password });
-        if (pwErr) throw new Error("Check your email to confirm your account, then come back to this link.");
-      }
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Could not establish a session.");
-      // Make sure name landed on the account (trigger seeds it from metadata).
-      if (name) {
-        await supabase.from("accounts").update({ name }).eq("id", userData.user.id);
-      }
-      await ensureMembershipAndGo(userData.user.id);
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+      // Tokens set directly — auto-join effect will pick it up.
+      await refreshSession();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      const msg = err instanceof Error ? err.message : "Google sign-in failed.";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -131,18 +116,22 @@ function JoinPage() {
     }
   }
 
-  async function handleExisting(e: React.FormEvent) {
+  async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setBusy(true);
     try {
-      const { error: pwErr } = await supabase.auth.signInWithPassword({ email, password });
-      if (pwErr) throw pwErr;
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Could not sign in.");
-      await ensureMembershipAndGo(userData.user.id);
+      const { error: otpErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.href,
+          data: name ? { name } : undefined,
+        },
+      });
+      if (otpErr) throw otpErr;
+      setMagicLinkSent(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sign-in failed.";
+      const msg = err instanceof Error ? err.message : "Could not send magic link.";
       setError(msg);
       toast.error(msg);
     } finally {
