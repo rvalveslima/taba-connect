@@ -15,6 +15,7 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Sign in to your Taba account." },
     ],
   }),
+  pendingComponent: () => null,
   component: AuthPage,
 });
 
