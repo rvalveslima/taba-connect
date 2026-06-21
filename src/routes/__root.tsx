@@ -78,14 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Taba your networking app" },
+      { name: "description", content: "Taba helps event attendees find 2-3 real connections by bringing together people aligned with their goals" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Taba your networking app" },
+      { property: "og:description", content: "Taba helps event attendees find 2-3 real connections by bringing together people aligned with their goals" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Taba your networking app" },
+      { name: "twitter:description", content: "Taba helps event attendees find 2-3 real connections by bringing together people aligned with their goals" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/hIKGFoPID3hs0h9R2k2UVPM5nEQ2/social-images/social-1782085390579-Screenshot_2026-06-21_192527.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/hIKGFoPID3hs0h9R2k2UVPM5nEQ2/social-images/social-1782085390579-Screenshot_2026-06-21_192527.webp" },
     ],
     links: [
       {
