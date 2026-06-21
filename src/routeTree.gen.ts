@@ -18,6 +18,7 @@ import { Route as JoinEventIdRouteImport } from './routes/join.$eventId'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedEventNewRouteImport } from './routes/_authenticated/event.new'
 import { Route as AuthenticatedEventEventIdIndexRouteImport } from './routes/_authenticated/event.$eventId.index'
+import { Route as AuthenticatedEventEventIdShareRouteImport } from './routes/_authenticated/event.$eventId.share'
 import { Route as AuthenticatedEventEventIdProfileRouteImport } from './routes/_authenticated/event.$eventId.profile'
 import { Route as AuthenticatedEventEventIdAttendeeMembershipIdRouteImport } from './routes/_authenticated/event.$eventId.attendee.$membershipId'
 
@@ -66,6 +67,12 @@ const AuthenticatedEventEventIdIndexRoute =
     path: '/event/$eventId/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedEventEventIdShareRoute =
+  AuthenticatedEventEventIdShareRouteImport.update({
+    id: '/event/$eventId/share',
+    path: '/event/$eventId/share',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedEventEventIdProfileRoute =
   AuthenticatedEventEventIdProfileRouteImport.update({
     id: '/event/$eventId/profile',
@@ -88,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/join/$eventId': typeof JoinEventIdRoute
   '/event/new': typeof AuthenticatedEventNewRoute
   '/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
+  '/event/$eventId/share': typeof AuthenticatedEventEventIdShareRoute
   '/event/$eventId/': typeof AuthenticatedEventEventIdIndexRoute
   '/event/$eventId/attendee/$membershipId': typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
   '/join/$eventId': typeof JoinEventIdRoute
   '/event/new': typeof AuthenticatedEventNewRoute
   '/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
+  '/event/$eventId/share': typeof AuthenticatedEventEventIdShareRoute
   '/event/$eventId': typeof AuthenticatedEventEventIdIndexRoute
   '/event/$eventId/attendee/$membershipId': typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
@@ -114,6 +123,7 @@ export interface FileRoutesById {
   '/join/$eventId': typeof JoinEventIdRoute
   '/_authenticated/event/new': typeof AuthenticatedEventNewRoute
   '/_authenticated/event/$eventId/profile': typeof AuthenticatedEventEventIdProfileRoute
+  '/_authenticated/event/$eventId/share': typeof AuthenticatedEventEventIdShareRoute
   '/_authenticated/event/$eventId/': typeof AuthenticatedEventEventIdIndexRoute
   '/_authenticated/event/$eventId/attendee/$membershipId': typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/join/$eventId'
     | '/event/new'
     | '/event/$eventId/profile'
+    | '/event/$eventId/share'
     | '/event/$eventId/'
     | '/event/$eventId/attendee/$membershipId'
   fileRoutesByTo: FileRoutesByTo
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/join/$eventId'
     | '/event/new'
     | '/event/$eventId/profile'
+    | '/event/$eventId/share'
     | '/event/$eventId'
     | '/event/$eventId/attendee/$membershipId'
   id:
@@ -153,6 +165,7 @@ export interface FileRouteTypes {
     | '/join/$eventId'
     | '/_authenticated/event/new'
     | '/_authenticated/event/$eventId/profile'
+    | '/_authenticated/event/$eventId/share'
     | '/_authenticated/event/$eventId/'
     | '/_authenticated/event/$eventId/attendee/$membershipId'
   fileRoutesById: FileRoutesById
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventEventIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/event/$eventId/share': {
+      id: '/_authenticated/event/$eventId/share'
+      path: '/event/$eventId/share'
+      fullPath: '/event/$eventId/share'
+      preLoaderRoute: typeof AuthenticatedEventEventIdShareRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/event/$eventId/profile': {
       id: '/_authenticated/event/$eventId/profile'
       path: '/event/$eventId/profile'
@@ -252,6 +272,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedEventNewRoute: typeof AuthenticatedEventNewRoute
   AuthenticatedEventEventIdProfileRoute: typeof AuthenticatedEventEventIdProfileRoute
+  AuthenticatedEventEventIdShareRoute: typeof AuthenticatedEventEventIdShareRoute
   AuthenticatedEventEventIdIndexRoute: typeof AuthenticatedEventEventIdIndexRoute
   AuthenticatedEventEventIdAttendeeMembershipIdRoute: typeof AuthenticatedEventEventIdAttendeeMembershipIdRoute
 }
@@ -260,6 +281,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedEventNewRoute: AuthenticatedEventNewRoute,
   AuthenticatedEventEventIdProfileRoute: AuthenticatedEventEventIdProfileRoute,
+  AuthenticatedEventEventIdShareRoute: AuthenticatedEventEventIdShareRoute,
   AuthenticatedEventEventIdIndexRoute: AuthenticatedEventEventIdIndexRoute,
   AuthenticatedEventEventIdAttendeeMembershipIdRoute:
     AuthenticatedEventEventIdAttendeeMembershipIdRoute,
