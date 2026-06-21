@@ -258,7 +258,7 @@ function DecisionPage() {
 
         {/* Overlap motif */}
         <section className="flex flex-col items-center">
-          <OverlapCircles count={overlap.length} />
+          <OverlapCircles count={bullets.length} />
           <div className="mt-2 flex w-36 justify-between text-[11px] uppercase tracking-wider text-muted-foreground">
             <span>you</span>
             <span>{fn}</span>
