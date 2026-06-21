@@ -280,7 +280,7 @@ function ProfilePage() {
                   );
                 })}
                 {tags
-                  .filter((t) => !INTEREST_TAGS.includes(t))
+                  .filter((t) => !(INTEREST_TAGS as readonly string[]).includes(t))
                   .map((t) => (
                     <span
                       key={t}
