@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { INTEREST_TAGS } from "@/lib/interest-tags";
@@ -13,12 +13,17 @@ type Account = {
   id: string;
   name: string;
   role: string | null;
-  industry: string | null;
+  company: string | null;
+  location: string | null;
+  linkedin_handle: string | null;
 };
 
 type Membership = {
   id: string;
   goal_tags: string[] | null;
+  looking_for: string | null;
+  give_back: string | null;
+  open_to_connect: boolean;
 };
 
 function ProfilePage() {
@@ -28,6 +33,9 @@ function ProfilePage() {
   const [account, setAccount] = useState<Account | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [lookingFor, setLookingFor] = useState("");
+  const [giveBack, setGiveBack] = useState("");
+  const [openToConnect, setOpenToConnect] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -39,16 +47,19 @@ function ProfilePage() {
       }
       const [{ data: ev }, { data: acc }, { data: mem }] = await Promise.all([
         supabase.from("events").select("name").eq("id", eventId).maybeSingle(),
-        supabase.from("accounts").select("id, name, role, industry").eq("id", userData.user.id).maybeSingle(),
+        supabase
+          .from("accounts")
+          .select("id, name, role, company, location, linkedin_handle")
+          .eq("id", userData.user.id)
+          .maybeSingle(),
         supabase
           .from("event_memberships")
-          .select("id, goal_tags")
+          .select("id, goal_tags, looking_for, give_back, open_to_connect")
           .eq("event_id", eventId)
           .eq("account_id", userData.user.id)
           .maybeSingle(),
       ]);
       if (!ev || !mem) {
-        // No membership for this event — bounce back to join.
         navigate({ to: "/join/$eventId", params: { eventId }, replace: true });
         return;
       }
@@ -56,6 +67,9 @@ function ProfilePage() {
       setAccount(acc as Account);
       setMembership(mem as Membership);
       setTags(mem.goal_tags ?? []);
+      setLookingFor(mem.looking_for ?? "");
+      setGiveBack(mem.give_back ?? "");
+      setOpenToConnect(mem.open_to_connect ?? true);
     })();
   }, [eventId, navigate]);
 
@@ -74,12 +88,19 @@ function ProfilePage() {
           .update({
             name: account.name,
             role: account.role,
-            industry: account.industry,
+            company: account.company,
+            location: account.location,
+            linkedin_handle: account.linkedin_handle,
           })
           .eq("id", account.id),
         supabase
           .from("event_memberships")
-          .update({ goal_tags: tags })
+          .update({
+            goal_tags: tags,
+            looking_for: lookingFor || null,
+            give_back: giveBack || null,
+            open_to_connect: openToConnect,
+          })
           .eq("id", membership.id),
       ]);
       if (accErr) throw accErr;
@@ -100,28 +121,25 @@ function ProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-4">
           <Link to="/event/$eventId" params={{ eventId }} className="text-sm text-muted-foreground hover:underline">
-            ← {eventName}
+            ← {eventName || "Back"}
           </Link>
-          <span className="text-xs uppercase tracking-wider text-muted-foreground">Your profile</span>
+          <span className="font-heading text-sm font-semibold">taba</span>
         </div>
       </header>
 
-      <form onSubmit={handleSave} className="mx-auto max-w-3xl space-y-8 px-6 py-10">
-        {/* Zone A — persistent identity */}
-        <section className="rounded-lg border-2 border-foreground bg-card p-6">
-          <div className="mb-6 flex items-baseline justify-between border-b border-border pb-3">
-            <div>
-              <h2 className="text-2xl font-semibold">About you</h2>
-              <p className="text-sm text-muted-foreground">
-                Persistent — carries with you across every Taba event.
-              </p>
-            </div>
-            <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Account</span>
+      <form onSubmit={handleSave} className="mx-auto max-w-2xl space-y-6 px-5 py-8 pb-32">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">Set up your profile</h1>
+
+        {/* Zone A — Account */}
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-5 flex items-baseline justify-between">
+            <h2 className="font-heading text-lg font-semibold">You</h2>
+            <span className="text-[11px] text-muted-foreground">↻ reused across events</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-4">
             <Field label="Name">
               <input
                 required
@@ -138,73 +156,135 @@ function ProfilePage() {
                 className="input"
               />
             </Field>
-            <div className="md:col-span-2">
-              <Field label="Industry / Company">
+            <Field label="Company">
+              <input
+                value={account.company ?? ""}
+                onChange={(e) => setAccount({ ...account, company: e.target.value })}
+                placeholder="e.g. TechForward"
+                className="input"
+              />
+            </Field>
+            <Field label="Location">
+              <input
+                value={account.location ?? ""}
+                onChange={(e) => setAccount({ ...account, location: e.target.value })}
+                placeholder="e.g. Lisbon, Portugal"
+                className="input"
+              />
+            </Field>
+            <Field label="LinkedIn">
+              <div className="flex items-stretch overflow-hidden rounded-md border border-border bg-background focus-within:outline focus-within:outline-2 focus-within:outline-offset-1 focus-within:outline-ring">
+                <span className="flex items-center bg-muted px-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  in
+                </span>
                 <input
-                  value={account.industry ?? ""}
-                  onChange={(e) => setAccount({ ...account, industry: e.target.value })}
-                  placeholder="e.g. SaaS, Acme Co."
-                  className="input"
+                  value={account.linkedin_handle ?? ""}
+                  onChange={(e) => setAccount({ ...account, linkedin_handle: e.target.value })}
+                  placeholder="/your-handle  or full URL"
+                  className="flex-1 bg-transparent px-3 py-2 text-sm text-foreground outline-none"
                 />
-              </Field>
-            </div>
+              </div>
+            </Field>
           </div>
         </section>
 
-        {/* Zone B — event-scoped */}
-        <section className="rounded-lg border-2 border-cobalt bg-card p-6">
-          <div className="mb-6 flex items-baseline justify-between border-b border-border pb-3">
-            <div>
-              <h2 className="text-2xl font-semibold" style={{ color: "var(--cobalt)" }}>
-                For this event
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Just for <span className="font-medium text-foreground">{eventName}</span>. Reset for each event you join.
-              </p>
-            </div>
-            <span className="text-xs uppercase tracking-[0.16em]" style={{ color: "var(--cobalt)" }}>
-              Event-only
+        {/* Zone B — Event-scoped */}
+        <section
+          className="rounded-2xl border-2 p-5 shadow-sm"
+          style={{ borderColor: "var(--primary)", background: "color-mix(in oklab, var(--primary) 6%, var(--card))" }}
+        >
+          <div className="mb-5 flex items-baseline justify-between">
+            <h2 className="font-heading text-lg font-semibold" style={{ color: "var(--primary)" }}>
+              {account.company ? `At ${account.company}` : `For ${eventName}`}
+            </h2>
+            <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--primary)" }}>
+              this event only
             </span>
           </div>
 
-          <p className="mb-3 text-sm font-medium">What do you want to talk about here?</p>
-          <p className="mb-4 text-xs text-muted-foreground">
-            Pick anything that fits. Overlap with other attendees is how we rank who to introduce you to.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {INTEREST_TAGS.map((t) => {
-              const on = tags.includes(t);
-              return (
-                <button
-                  type="button"
-                  key={t}
-                  onClick={() => toggleTag(t)}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                    on
-                      ? "border-cobalt bg-cobalt text-cobalt-foreground"
-                      : "border-border bg-background text-foreground hover:border-foreground"
-                  }`}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            {tags.length} selected{tags.length < 3 && " — pick 3+ for better matches"}
-          </p>
-        </section>
+          <div className="space-y-5">
+            <div>
+              <p className="mb-2 text-sm font-medium">Your goals here</p>
+              <div className="flex flex-wrap gap-2">
+                {INTEREST_TAGS.map((t) => {
+                  const on = tags.includes(t);
+                  return (
+                    <button
+                      type="button"
+                      key={t}
+                      onClick={() => toggleTag(t)}
+                      className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                        on
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-foreground hover:border-primary/60"
+                      }`}
+                    >
+                      {t} {on && "✓"}
+                    </button>
+                  );
+                })}
+              </div>
+              {tags.length < 3 && (
+                <p className="mt-2 text-xs text-muted-foreground">Pick 3+ for better matches.</p>
+              )}
+            </div>
 
-        <div className="flex justify-end gap-3">
+            <Field label="I'm looking for ↓">
+              <input
+                value={lookingFor}
+                onChange={(e) => setLookingFor(e.target.value)}
+                placeholder="e.g. A path into PM leadership"
+                className="input"
+              />
+            </Field>
+
+            <Field label="I can give back ↑">
+              <input
+                value={giveBack}
+                onChange={(e) => setGiveBack(e.target.value)}
+                placeholder="e.g. PMM strategy & positioning"
+                className="input"
+              />
+            </Field>
+
+            <label className="flex items-center justify-between gap-3 border-t border-border/60 pt-4">
+              <span className="flex items-center gap-2 text-sm font-medium">
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ background: openToConnect ? "var(--primary)" : "var(--muted-foreground)" }}
+                />
+                Open to connect
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={openToConnect}
+                onClick={() => setOpenToConnect((v) => !v)}
+                className="relative h-6 w-11 rounded-full transition"
+                style={{ background: openToConnect ? "var(--primary)" : "var(--muted)" }}
+              >
+                <span
+                  className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all"
+                  style={{ left: openToConnect ? "calc(100% - 1.375rem)" : "0.125rem" }}
+                />
+              </button>
+            </label>
+          </div>
+        </section>
+      </form>
+
+      {/* Sticky CTA */}
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 backdrop-blur">
+        <div className="mx-auto max-w-2xl px-5 py-3">
           <button
-            type="submit"
+            onClick={handleSave}
             disabled={saving}
-            className="rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-full bg-foreground px-6 py-3.5 text-base font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save & see attendees"}
+            {saving ? "Saving…" : "Find people →"}
           </button>
         </div>
-      </form>
+      </div>
 
       <style>{`
         .input {
@@ -225,9 +305,7 @@ function ProfilePage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
+      <span className="mb-1.5 block text-xs font-semibold text-foreground/80">{label}</span>
       {children}
     </label>
   );
