@@ -279,6 +279,52 @@ function ProfilePage() {
                     </button>
                   );
                 })}
+                {tags
+                  .filter((t) => !INTEREST_TAGS.includes(t))
+                  .map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+                    >
+                      {t}
+                      <button
+                        type="button"
+                        onClick={() => toggleTag(t)}
+                        className="opacity-80 hover:opacity-100"
+                        aria-label={`Remove ${t}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                {!addingTag ? (
+                  <button
+                    type="button"
+                    onClick={() => setAddingTag(true)}
+                    className="rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+                  >
+                    + add
+                  </button>
+                ) : (
+                  <input
+                    autoFocus
+                    value={tagDraft}
+                    onChange={(e) => setTagDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addCustomTag(tagDraft);
+                      } else if (e.key === "Escape") {
+                        setTagDraft("");
+                        setAddingTag(false);
+                      }
+                    }}
+                    onBlur={() => addCustomTag(tagDraft)}
+                    placeholder="Type a goal…"
+                    maxLength={40}
+                    className="rounded-full border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-foreground"
+                  />
+                )}
               </div>
               {tags.length < 3 && (
                 <p className="mt-2 text-xs text-muted-foreground">Pick 3+ for better matches.</p>
