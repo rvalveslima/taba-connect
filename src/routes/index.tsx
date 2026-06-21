@@ -99,20 +99,21 @@ function Hero({ onJoin }: { onJoin: () => void }) {
           <p className="mb-6 inline-block border-2 border-foreground bg-background px-3 py-1 font-display text-xs uppercase tracking-[0.2em]">
             For event organizers
           </p>
-          <h1 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-foreground sm:text-6xl lg:text-7xl xl:text-8xl">
-            Events make
+          <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
+            The hardest part of networking
             <br />
-            <span className="text-primary">contacts.</span>
+            isn't talking to people.
             <br />
-            Not connections.
+            <span className="text-primary">It's knowing who to talk to.</span>
           </h1>
           <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
-            Taba helps your attendees leave with{" "}
+            Taba shows you{" "}
             <span className="font-semibold text-foreground">
-              2–3 real connections
+              what you have in common
             </span>{" "}
-            — not a stack of LinkedIn adds they'll never message.
+            with someone — before you approach.
           </p>
+
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Button
               onClick={onJoin}
