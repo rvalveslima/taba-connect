@@ -232,6 +232,22 @@ function AuthPage() {
           </p>
         </div>
 
+        {currentEmail && (
+          <div className="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm" role="status">
+            <p className="text-foreground">
+              Signed in as <span className="font-medium">{currentEmail}</span>.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs">
+              <button type="button" onClick={handleContinueAsCurrent} className="font-medium text-primary hover:underline">
+                Continue as {currentEmail.split("@")[0]} →
+              </button>
+              <button type="button" onClick={handleSwitchAccount} className="text-muted-foreground hover:text-foreground hover:underline">
+                Sign out and use a different account
+              </button>
+            </div>
+          </div>
+        )}
+
         {isOrganizer && (
           <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
             Demo access — use any email with password{" "}
