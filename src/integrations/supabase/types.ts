@@ -16,29 +16,35 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          company: string | null
           created_at: string
           id: string
           industry: string | null
           languages: string[] | null
           linkedin_handle: string | null
+          location: string | null
           name: string
           role: string | null
         }
         Insert: {
+          company?: string | null
           created_at?: string
           id: string
           industry?: string | null
           languages?: string[] | null
           linkedin_handle?: string | null
+          location?: string | null
           name: string
           role?: string | null
         }
         Update: {
+          company?: string | null
           created_at?: string
           id?: string
           industry?: string | null
           languages?: string[] | null
           linkedin_handle?: string | null
+          location?: string | null
           name?: string
           role?: string | null
         }
