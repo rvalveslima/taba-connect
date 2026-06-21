@@ -14,12 +14,10 @@ const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
   date_start: z.string().optional().nullable(),
   date_end: z.string().optional().nullable(),
-  event_code: z
-    .string()
-    .trim()
-    .max(20)
-    .regex(/^[A-Za-z0-9-]*$/, "Letters, numbers, and dashes only"),
 });
+
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function randomCode() {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -33,8 +31,27 @@ function CreateEventPage() {
   const [name, setName] = useState("");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
-  const [code, setCode] = useState(randomCode());
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  function handleFile(file: File | null) {
+    if (!file) {
+      setImageFile(null);
+      setImagePreview(null);
+      return;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Use a JPG, PNG, or WEBP image.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be smaller than 3MB.");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +61,6 @@ function CreateEventPage() {
         name,
         date_start: dateStart || null,
         date_end: dateEnd || null,
-        event_code: code,
       });
       if (!parsed.success) {
         throw new Error(parsed.error.issues[0]?.message ?? "Check your inputs.");
@@ -55,6 +71,7 @@ function CreateEventPage() {
 
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not signed in");
+      const userId = userData.user.id;
 
       const { data: ev, error: evErr } = await supabase
         .from("events")
@@ -62,21 +79,36 @@ function CreateEventPage() {
           name: parsed.data.name,
           date_start: parsed.data.date_start,
           date_end: parsed.data.date_end,
-          event_code: parsed.data.event_code || randomCode(),
-          organizer_account_id: userData.user.id,
+          event_code: randomCode(),
+          organizer_account_id: userId,
         })
         .select("id")
         .single();
       if (evErr) throw evErr;
 
+      // Upload cover image if provided.
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${userId}/${ev.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("event-images")
+          .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+        if (upErr) throw upErr;
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("event-images")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+        if (signErr) throw signErr;
+        await supabase.from("events").update({ image_url: signed.signedUrl }).eq("id", ev.id);
+      }
+
       // Organizer is also a member so dashboard/share screens work.
       const { error: memErr } = await supabase
         .from("event_memberships")
-        .insert({ event_id: ev.id, account_id: userData.user.id, goal_tags: [] });
+        .insert({ event_id: ev.id, account_id: userId, goal_tags: [] });
       if (memErr) throw memErr;
 
       toast.success("Event created");
-      navigate({ to: "/event/$eventId/profile", params: { eventId: ev.id } });
+      navigate({ to: "/event/$eventId/share", params: { eventId: ev.id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not create event.");
     } finally {
@@ -93,8 +125,8 @@ function CreateEventPage() {
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-5 py-10">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight">Create an event</h1>
-        <p className="mt-1 text-sm text-muted-foreground">You'll get a link and QR to share with attendees.</p>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">Create your event</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Add the basics — you'll get a link and QR to share with attendees.</p>
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <Field label="Event name">
             <input
@@ -114,23 +146,22 @@ function CreateEventPage() {
               <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} className="input" />
             </Field>
           </div>
-          <Field label="Event code">
-            <div className="flex gap-2">
+
+          <Field label="Event image (optional)">
+            <div className="space-y-3">
+              {imagePreview && (
+                <div className="overflow-hidden rounded-md border border-border">
+                  <img src={imagePreview} alt="Event cover preview" className="h-48 w-full object-cover" />
+                </div>
+              )}
               <input
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                maxLength={20}
-                className="input flex-1 uppercase tracking-widest"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+                className="block w-full text-sm text-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-background file:px-3 file:py-1.5 file:text-xs file:font-medium hover:file:bg-accent"
               />
-              <button
-                type="button"
-                onClick={() => setCode(randomCode())}
-                className="rounded-md border border-border bg-background px-3 text-xs hover:bg-accent"
-              >
-                Regenerate
-              </button>
+              <p className="text-xs text-muted-foreground">JPG, PNG, or WEBP. Max 3MB.</p>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Short code attendees can type as a fallback.</p>
           </Field>
 
           <button
@@ -138,7 +169,7 @@ function CreateEventPage() {
             disabled={busy || !name.trim()}
             className="mt-4 w-full rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background hover:opacity-90 disabled:opacity-50"
           >
-            {busy ? "Creating…" : "Create event →"}
+            {busy ? "Creating…" : "Generate event link →"}
           </button>
         </form>
         <style>{`
