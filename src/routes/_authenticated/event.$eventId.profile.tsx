@@ -16,7 +16,13 @@ type Account = {
   company: string | null;
   location: string | null;
   linkedin_handle: string | null;
+  languages: string[] | null;
 };
+
+const COMMON_LANGUAGES = [
+  "English", "Português", "Español", "Français", "Deutsch", "Italiano",
+  "Nederlands", "中文", "日本語", "한국어", "العربية", "हिन्दी",
+];
 
 type Membership = {
   id: string;
