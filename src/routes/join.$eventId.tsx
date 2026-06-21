@@ -22,7 +22,7 @@ export const Route = createFileRoute("/join/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, date_start, date_end, image_url")
+      .select("id, name, date_start, date_end, image_url, organizer_account_id")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) {
