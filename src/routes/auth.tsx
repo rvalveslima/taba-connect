@@ -24,7 +24,9 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
 
   // If already signed in, send to home.
   useEffect(() => {
@@ -36,10 +38,11 @@ function AuthPage() {
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
       if (mode === "sign-up") {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -48,6 +51,12 @@ function AuthPage() {
           },
         });
         if (signUpError) throw signUpError;
+        if (!data.session) {
+          setInfo("Check your email to confirm your account, then sign in.");
+          setMode("sign-in");
+          setPassword("");
+          return;
+        }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -58,6 +67,25 @@ function AuthPage() {
       navigate({ to: "/app", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (resetErr) throw resetErr;
+      setInfo("Check your email for a reset link.");
+      setForgotMode(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send reset email.");
     } finally {
       setLoading(false);
     }
