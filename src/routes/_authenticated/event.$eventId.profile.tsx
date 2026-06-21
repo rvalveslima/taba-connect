@@ -175,7 +175,7 @@ function ProfilePage() {
           <Link to="/event/$eventId" params={{ eventId }} className="text-sm text-muted-foreground hover:underline">
             ← {eventName || "Back"}
           </Link>
-          <TabaLogo height={24} />
+          <TabaLogo height={44} />
         </div>
       </header>
 
