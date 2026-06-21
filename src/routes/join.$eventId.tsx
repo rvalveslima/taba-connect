@@ -9,6 +9,7 @@ type EventRow = {
   date_start: string | null;
   date_end: string | null;
   image_url: string | null;
+  organizer_account_id: string | null;
 };
 
 export const Route = createFileRoute("/join/$eventId")({
