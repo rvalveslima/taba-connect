@@ -106,6 +106,51 @@ function AuthPage() {
     navigate({ to: "/app", replace: true });
   }
 
+  if (forgotMode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-6 text-center">
+            <Link to="/" className="inline-flex items-center justify-center">
+              <TabaLogo height={32} />
+            </Link>
+            <h1 className="mt-4 text-2xl font-semibold">Reset password</h1>
+            <p className="mt-1 text-sm text-muted-foreground">We'll email you a link to set a new one.</p>
+          </div>
+          <form onSubmit={handleForgot} className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium" htmlFor="reset-email">Email</label>
+              <input
+                id="reset-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                autoComplete="email"
+              />
+            </div>
+            {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || !email}
+              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {loading ? "Sending…" : "Send reset link"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setForgotMode(false); setError(null); }}
+              className="block w-full text-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              Back to sign in
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
@@ -122,6 +167,12 @@ function AuthPage() {
               : "Start building your village."}
           </p>
         </div>
+
+        {info && (
+          <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
+            {info}
+          </div>
+        )}
 
         <button
           onClick={handleGoogle}
@@ -168,9 +219,18 @@ function AuthPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium" htmlFor="password">
-              Password
-            </label>
+            <div className="mb-1 flex items-baseline justify-between">
+              <label className="block text-xs font-medium" htmlFor="password">Password</label>
+              {mode === "sign-in" && (
+                <button
+                  type="button"
+                  onClick={() => { setForgotMode(true); setError(null); setInfo(null); }}
+                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <input
               id="password"
               type="password"
@@ -204,6 +264,7 @@ function AuthPage() {
             type="button"
             onClick={() => {
               setError(null);
+              setInfo(null);
               setMode(mode === "sign-in" ? "sign-up" : "sign-in");
             }}
             className="font-medium text-foreground hover:underline"
