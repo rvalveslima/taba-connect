@@ -41,6 +41,8 @@ function ProfilePage() {
   const [account, setAccount] = useState<Account | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [addingTag, setAddingTag] = useState(false);
+  const [tagDraft, setTagDraft] = useState("");
   const [lookingFor, setLookingFor] = useState("");
   const [giveBack, setGiveBack] = useState("");
   const [openToConnect, setOpenToConnect] = useState(true);
