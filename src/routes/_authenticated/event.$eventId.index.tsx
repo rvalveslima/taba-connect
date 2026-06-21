@@ -80,7 +80,7 @@ function DashboardPage() {
     navigate({
       to: "/event/$eventId",
       params: { eventId },
-      search: (prev) => {
+      search: (prev: DashboardSearch) => {
         const next = { ...prev } as DashboardSearch;
         if (value === undefined || value === "all" || value === false) {
           delete next[key];
@@ -229,7 +229,7 @@ function DashboardPage() {
           <FilterPill label="Goal" value={goalFilter} onChange={setGoalFilter} options={goalOptions as unknown as string[]} />
           <FilterPill label="Language" value={languageFilter} onChange={setLanguageFilter} options={languageOptions} />
           <button
-            onClick={() => setOpenOnly((v) => !v)}
+            onClick={() => setOpenOnly(!openOnly)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition ${
               openOnly
                 ? "border-[color:var(--moss)] bg-[color:color-mix(in_oklab,var(--moss)_22%,transparent)] text-foreground"
