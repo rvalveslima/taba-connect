@@ -1,61 +1,78 @@
-## Goal
+## Pass A — correctness & security (do first)
 
-Connect the pieces that already exist into one continuous attendee journey, and fill in the missing bits: organizer share UI (link + QR), a proper landing page with a current-event banner, and the missing dashboard filters (language, company, goals, open-to-connect).
+Small, focused, removes real risks. No new screens.
 
-## What already works (keep as-is)
+### A1. Input validation on profile save
+Add a zod schema to `src/routes/_authenticated/event.$eventId.profile.tsx` and validate before the Supabase update. Caps:
+- `name` 1–100, trim, required
+- `role`, `company`, `location` ≤ 120, trim, optional
+- `linkedin_handle` ≤ 200, see A2
+- `looking_for`, `give_back` ≤ 500, trim
+- `languages` ≤ 20 entries, each ≤ 40
+- `goal_tags` only values present in `INTEREST_TAGS`
 
-- `/join/$eventId` — login / signup gate, creates membership, sends user to profile
-- `/event/$eventId/profile` — two-zone profile (You + event-scoped), saves and redirects to dashboard
-- `/event/$eventId` — dashboard with attendee cards, overlap-sorted
-- Auth gate via `_authenticated` layout
+On failure, surface the first message via `toast.error` and don't navigate.
 
-## What changes
+### A2. LinkedIn handle: normalize + sanitize
+Save format: bare handle only (e.g. `raquel-lima`). Logic at save:
+- accept `https://linkedin.com/in/<handle>`, `linkedin.com/in/<handle>`, `/in/<handle>`, `/<handle>`, or `<handle>`
+- strip protocol/host/path; keep the segment after `/in/` (or the whole input if no slashes)
+- reject if it contains `:`, whitespace, `<`, `>`, or `"` (blocks `javascript:` and HTML injection)
+- regex: `^[A-Za-z0-9-_.]{2,100}$`
 
-### 1. Organizer share screen (link + QR)
-On the organizer's event page (existing screen — will locate it on entry to build mode), add a "Share with attendees" panel that shows:
-- The full join URL (`https://<host>/join/<eventId>`) with a copy button
-- A QR code rendering the same URL
-- The short event code as a fallback
+On render (attendee detail page), always construct `https://www.linkedin.com/in/<encodeURIComponent(handle)>` — never use the raw stored value as href.
 
-Use `qrcode` (tiny, pure-JS) — added via `bun add qrcode`. Rendered to a canvas client-side, no server work.
+### A3. Profile-completeness gating
+On `/event/$eventId/` (dashboard), if the user's own membership has empty `goal_tags`, redirect to `/event/$eventId/profile` instead of rendering. The landing page already routes incomplete profiles correctly; this closes the direct-URL hole.
 
-### 2. Landing page rework — `/app`
-Replace the current "demo + your events" layout with the requested structure:
+### A4. Sign-out hygiene
+In `/app` and the dashboard's sign-out handler:
+```
+await queryClient.cancelQueries();
+queryClient.clear();
+await supabase.auth.signOut();
+navigate({ to: "/auth", replace: true });
+```
+We don't use React Query yet, but the pattern is cheap and future-proofs it. If we have no `queryClient` in scope, just keep `signOut` + `replace: true` — that part is already correct.
 
-- **Current event banner** (top): if the user just joined an event (most-recent membership in the last N hours, or passed via `?event=<id>` from the join flow) show a prominent banner with event name + dates + a primary CTA "Continue to event". Clicking takes them into `/event/$eventId` (or `/event/$eventId/profile` if their profile for that event is still empty).
-- **Past events** (below): the existing list, minus the demo box.
-- Empty state when there are zero events.
+### A5. Enable HIBP leaked-password check
+Call `configure_auth` with `password_hibp_enabled: true` (keep other flags at current values: `disable_signup: false`, `auto_confirm_email: false` unless you want demo mode, `external_anonymous_users_enabled: false`).
 
-The "currentness" rule: most recent `event_memberships.joined_at` within the last 24h is treated as the active event for the banner. Everything older falls into Past.
+---
 
-### 3. Profile entry point
-Card click on the landing currently goes straight to `/event/$eventId`. Update it to route to `/event/$eventId/profile` when the membership has no `goal_tags` yet (profile incomplete) and to the dashboard otherwise. One query already pulls `goal_tags`; just branch on it.
+## Pass B — missing features
 
-### 4. Dashboard filters — `/event/$eventId/`
-Today it filters by role + a single tag. Expand to the full set:
+### B1. Organizer "create event" screen
+New route `src/routes/_authenticated/event.new.tsx`. Form: name (required), date_start, date_end, event_code (auto-generated 6-char if blank). On submit:
+1. `INSERT INTO events` with `organizer_account_id = auth.uid()`
+2. `INSERT INTO event_memberships` so the organizer is also an attendee (needed for the share/dashboard to load)
+3. navigate to `/event/$eventId`
 
-- **Role** (existing dropdown)
-- **Language** — dropdown of languages present across attendees (read from `accounts.languages`)
-- **Company** — dropdown of companies present (`accounts.company`)
-- **Goals** — multi-select chips against `event_memberships.goal_tags` (replaces today's single-tag filter; AND across selected)
-- **Open to connect** — toggle that hides anyone with `open_to_connect = false`
+Add a "Create event" button on `/app` next to the join-by-code panel.
 
-Also add the missing fields to the attendee query (`languages`, `company`) and surface `company` on the card subtitle (Role · Company).
+### B2. Google sign-in: configure provider
+Call `configure_social_auth` with `providers: ["google"]`. The button on `/auth` already calls `lovable.auth.signInWithOAuth("google")`, so no code change.
 
-A "Clear filters" link appears when any filter is active. Sort order (overlap desc, name asc) stays.
+### B3. Password reset
+- Add "Forgot password?" link on `/auth` (sign-in mode) → calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/reset-password` })`
+- Create public route `/reset-password` that shows a new-password form and calls `supabase.auth.updateUser({ password })`, then redirects to `/app`
 
-## Technical details
+### B4. Email-confirmation handling on `/auth`
+After `signUp` succeeds with no session returned, don't navigate to `/app` (that loops back to `/auth`). Show: "Check your email to confirm your account, then sign in." Stay on the page.
 
-- **New dep**: `qrcode` (~20kB). Imported only in the organizer share component.
-- **Route changes**: no new routes. Edits to `src/routes/_authenticated/app.tsx`, `src/routes/_authenticated/event.$eventId.index.tsx`, and the organizer event page (located on entry to build mode).
-- **Schema**: no migration. All needed columns exist (`accounts.languages`, `accounts.company`, `event_memberships.open_to_connect`, `goal_tags`).
-- **Profile-incomplete branch**: detected client-side by `goal_tags is null or length 0` on the user's own membership for that event.
-- **Current-event window**: 24h since `joined_at`. Chosen because it cleanly captures "the event they just joined" without needing an event-date check, and avoids surprises if dates aren't set.
+### B5. Messaging UI
+Smallest useful version: on the attendee detail page, list prior messages between me and them (already permitted by RLS), keep the send form. Add a small "Messages" link in the dashboard header that lists threads (group by `recipient_membership_id`). Inbox is optional — confirm if you want it now or later.
 
-## Out of scope (ask if you want them next)
+### B6. Filter state in URL
+Move dashboard filters (`role`, `company`, `goal`, `language`, `openOnly`) into search params via `validateSearch` + `zodValidator`. Filters survive refresh and are shareable.
 
-- Editing the organizer flow beyond adding the share panel
-- Notifications / email when someone joins
-- "Mark event as past" manual control
-- Persisting filter state in the URL
+---
 
+## Notes / out of scope
+
+- **Auth email templates** (branded reset/confirm emails) — separate setup that needs an email domain. Skipping unless you ask.
+- **Edit-after-create for events** — organizers can't currently change name/dates from the UI. Add later if needed.
+- **Leave-event button** — RLS allows it, no UI. Skipping unless you ask.
+- **Real "past" semantics** based on `date_end < today` — small, can fold into B1 or do separately.
+
+I'll execute Pass A in one batch, then Pass B in a second batch. Approve and I'll start.
