@@ -67,14 +67,14 @@ function AppHome() {
 
   async function handleJoinByCode(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = code.trim();
+    const trimmed = code.trim().toUpperCase();
     if (!trimmed) return;
     setCodeBusy(true);
     try {
       const { data, error } = await supabase
         .from("events")
         .select("id")
-        .ilike("event_code", trimmed)
+        .eq("event_code", trimmed)
         .maybeSingle();
       if (error) throw error;
       if (!data) {
