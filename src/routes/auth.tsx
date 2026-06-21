@@ -43,7 +43,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
 
-  const postAuthTarget = isOrganizer ? "/event/new" : "/app";
+  const postAuthTarget = isOrganizer ? "/organizer" : "/app";
 
   // Track currently signed-in user (if any) so testers can switch accounts
   // without being silently redirected away from the sign-in form.
