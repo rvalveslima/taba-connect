@@ -74,14 +74,33 @@ function DecisionPage() {
       const ov = overlapTags(mineTags, t.tags);
       setOverlap(ov);
 
-      // Prefill suggested message
-      const firstName = t.name.split(" ")[0];
-      const opener = ov[0]
-        ? `Hey ${firstName} — saw we're both into ${ov[0]}${
-            ov[1] ? ` and ${ov[1]}` : ""
-          }. Would love a quick chat about it while we're here.`
-        : `Hey ${firstName} — noticed your profile and would love to connect while we're at ${ev.name}.`;
-      setBody(opener);
+      // Load existing thread between me and them.
+      const { data: msgs } = await supabase
+        .from("messages")
+        .select("id, body, sent_at, sender_membership_id")
+        .eq("event_id", eventId)
+        .or(
+          `and(sender_membership_id.eq.${myMem.id},recipient_membership_id.eq.${theirRow.id}),and(sender_membership_id.eq.${theirRow.id},recipient_membership_id.eq.${myMem.id})`,
+        )
+        .order("sent_at", { ascending: true });
+      const mapped = (msgs ?? []).map((m: any) => ({
+        id: m.id,
+        body: m.body,
+        sent_at: m.sent_at,
+        mine: m.sender_membership_id === myMem.id,
+      }));
+      setThread(mapped);
+
+      // Prefill suggested message (only when no prior thread)
+      if (mapped.length === 0) {
+        const firstName = t.name.split(" ")[0];
+        const opener = ov[0]
+          ? `Hey ${firstName} — saw we're both into ${ov[0]}${
+              ov[1] ? ` and ${ov[1]}` : ""
+            }. Would love a quick chat about it while we're here.`
+          : `Hey ${firstName} — noticed your profile and would love to connect while we're at ${ev.name}.`;
+        setBody(opener);
+      }
     })();
   }, [eventId, membershipId, navigate]);
 
