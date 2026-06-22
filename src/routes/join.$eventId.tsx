@@ -160,6 +160,24 @@ function JoinPage() {
     }
   }
 
+  async function handleDemoAttendee() {
+    setError(null);
+    setBusy(true);
+    try {
+      const ok = await signInAsDemoAttendee();
+      if (!ok) return;
+      await ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not start demo.";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const showDemoButton = DEMO_MODE_ENABLED && eventId === DEMO_EVENT_ID;
+
   const dateLine =
     event.date_start && event.date_end
       ? `${event.date_start} – ${event.date_end}`
