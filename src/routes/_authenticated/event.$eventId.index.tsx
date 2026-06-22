@@ -373,7 +373,7 @@ function FilterPill({
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: string[];
+  options: Array<string | { value: string; label: string }>;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -386,7 +386,11 @@ function FilterPill({
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
+  const normalized = options.map((o) =>
+    typeof o === "string" ? { value: o, label: o } : o,
+  );
   const active = value !== "all";
+  const activeLabel = normalized.find((o) => o.value === value)?.label ?? value;
 
   return (
     <div ref={ref} className="relative">
@@ -398,7 +402,7 @@ function FilterPill({
             : "border-border bg-card text-foreground hover:border-foreground/40"
         }`}
       >
-        <span>{active ? value : label}</span>
+        <span>{active ? activeLabel : label}</span>
         <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
           <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -416,21 +420,21 @@ function FilterPill({
           >
             All {label.toLowerCase()}s
           </button>
-          {options.length === 0 && (
+          {normalized.length === 0 && (
             <p className="px-3 py-2 text-xs text-muted-foreground">No options yet</p>
           )}
-          {options.map((o) => (
+          {normalized.map((o) => (
             <button
-              key={o}
+              key={o.value}
               onClick={() => {
-                onChange(o);
+                onChange(o.value);
                 setOpen(false);
               }}
               className={`block w-full px-3 py-2 text-left text-xs hover:bg-muted ${
-                value === o ? "font-semibold" : ""
+                value === o.value ? "font-semibold" : ""
               }`}
             >
-              {o}
+              {o.label}
             </button>
           ))}
         </div>
