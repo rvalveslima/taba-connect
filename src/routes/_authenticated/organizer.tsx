@@ -60,7 +60,7 @@ function OrganizerHome() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", search: { as: "organizer" }, replace: true });
+    navigate({ to: "/", replace: true });
   }
 
   function formatDates(e: OrganizerEvent) {
