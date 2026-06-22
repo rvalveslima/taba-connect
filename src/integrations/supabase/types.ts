@@ -216,6 +216,17 @@ export type Database = {
     Functions: {
       find_event_by_code: { Args: { _code: string }; Returns: string }
       get_event_code: { Args: { _event_id: string }; Returns: string }
+      get_event_public_info: {
+        Args: { _event_id: string }
+        Returns: {
+          date_end: string
+          date_start: string
+          id: string
+          image_url: string
+          name: string
+          organizer_account_id: string
+        }[]
+      }
       is_event_member: { Args: { _event_id: string }; Returns: boolean }
       is_my_membership: { Args: { _membership_id: string }; Returns: boolean }
       shares_event_with: { Args: { _other: string }; Returns: boolean }
