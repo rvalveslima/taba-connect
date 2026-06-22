@@ -1,21 +1,17 @@
-## Plan
+## Goal
+When an attendee signs out, the page they land on (`/auth`) should include the same "I'm here for the demo" one-click button that exists on the join page — right now that button only appears for organizers.
 
-Redesign the join page into a single, centered, compact card. No more huge red side panel.
+## Change
+In `src/routes/auth.tsx`, add a demo-attendee block that mirrors the existing organizer demo block, but only renders on the attendee variant of the page (the default — i.e. when `as !== "organizer"`).
 
-### Layout
-- Single column, centered vertically and horizontally on `bg-background`.
-- Taba logo at top of card (using `<TabaLogo />`).
-- Compact event header inside the card:
-  - If `event.image_url` exists: small rounded banner image (e.g. ~h-32, full card width, `object-cover`) at top.
-  - Below: small uppercase "You're joining" eyebrow, event name (h1, ~text-2xl), and date line if present.
-- Divider, then the existing auth/join UI (Google, demo button, magic link form, signed-in state, organizer state) — unchanged in behavior and copy.
-- Drop the "Build your own village / Two or three real connections" tagline (was part of removed red panel).
+- Import `signInAsDemoAttendee` from `@/lib/demo-mode` (alongside the existing `signInAsDemoOrganizer` import).
+- Above the Google button, when `!isOrganizer && DEMO_MODE_ENABLED && !magicLinkSent`, render:
+  - A primary "I'm here for the demo →" button that calls `signInAsDemoAttendee()`, then on success `navigate({ to: "/app", replace: true })`.
+  - Helper copy: "One-click access as a demo attendee."
+  - The same "or sign in" divider used in the organizer block.
+- No changes to the magic-link form, Google button, organizer flow, or sign-out logic. Attendee sign-out already routes to `/auth`; this just makes that page useful for demos.
 
-### Styling
-- Card: `max-w-md mx-auto`, rounded, border, soft shadow, padding.
-- Keep all existing buttons, links, error states, terms link, and the demo callout exactly as they are.
-- Remove the entire `<aside>` and the 2-column grid wrapper.
-
-### Out of scope
-- No changes to auth logic, demo flow, or routing.
-- No copy changes beyond removing the side-panel tagline.
+## Out of scope
+- No routing changes for sign-out (already correct).
+- No copy or layout changes beyond inserting the demo block.
+- No changes to the organizer demo block or join page.

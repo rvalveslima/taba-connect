@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { TabaLogo } from "@/components/taba-logo";
-import { DEMO_MODE_ENABLED, signInAsDemoOrganizer } from "@/lib/demo-mode";
+import { DEMO_MODE_ENABLED, signInAsDemoOrganizer, signInAsDemoAttendee } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -298,6 +298,36 @@ function AuthPage() {
             </button>
             <p className="mt-2 text-center text-xs text-muted-foreground">
               One-click access to the pre-built Shebuilds event.
+            </p>
+            <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              or sign in
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          </div>
+        )}
+
+        {!isOrganizer && DEMO_MODE_ENABLED && !magicLinkSent && (
+          <div className="mb-4">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={async () => {
+                setError(null);
+                setLoading(true);
+                const ok = await signInAsDemoAttendee();
+                if (ok) {
+                  navigate({ to: "/app", replace: true });
+                } else {
+                  setLoading(false);
+                }
+              }}
+              className="w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+            >
+              I'm here for the demo →
+            </button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              One-click access as a demo attendee.
             </p>
             <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
               <div className="h-px flex-1 bg-border" />
