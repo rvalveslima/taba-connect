@@ -45,7 +45,6 @@ function MarketingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Nav onJoin={goOrganizer} />
       <Hero onJoin={goOrganizer} />
       <Problem />
       <VillageStory />
