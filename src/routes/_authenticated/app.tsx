@@ -1,11 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ATTENDEE_ACCOUNT_ID } from "@/lib/demo-mode";
 import { friendlyError } from "@/lib/supabase-errors";
 import { RouteErrorFallback } from "@/components/route-fallbacks";
+import { deleteMyAccount } from "@/lib/account.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
