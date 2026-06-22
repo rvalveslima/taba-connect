@@ -3,6 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import {
+  DEMO_MODE_ENABLED,
+  DEMO_EVENT_ID,
+  DEMO_ATTENDEE_ACCOUNT_ID,
+  signInAsDemoAttendee,
+} from "@/lib/demo-mode";
 
 type EventRow = {
   id: string;
@@ -154,6 +160,24 @@ function JoinPage() {
     }
   }
 
+  async function handleDemoAttendee() {
+    setError(null);
+    setBusy(true);
+    try {
+      const ok = await signInAsDemoAttendee();
+      if (!ok) return;
+      await ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not start demo.";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const showDemoButton = DEMO_MODE_ENABLED && eventId === DEMO_EVENT_ID;
+
   const dateLine =
     event.date_start && event.date_end
       ? `${event.date_start} – ${event.date_end}`
@@ -269,6 +293,22 @@ function JoinPage() {
               <p className="mb-5 text-xs text-muted-foreground">
                 Google is the fastest way in.
               </p>
+
+              {showDemoButton && (
+                <div className="mb-5 rounded-md border border-primary/30 bg-primary/5 p-3">
+                  <button
+                    type="button"
+                    onClick={handleDemoAttendee}
+                    disabled={busy}
+                    className="w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {busy ? "Starting demo…" : "I'm here for the demo →"}
+                  </button>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    One-click demo attendee — you'll fill a quick profile next.
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={handleGoogle}

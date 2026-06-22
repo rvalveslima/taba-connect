@@ -1,49 +1,66 @@
 ## Goal
-A judge clicks **"I'm here for the demo"** → lands directly in the Shebuilds organizer dashboard → grabs the attendee join link → runs the real attendee flow. Existing auth is untouched. Button is gated behind a single flag you can flip off after the demo.
 
-## Status
-- ✅ Demo organizer account `demo@taba.events` / `Tabaevent123` created in the database.
-- ✅ **Shebuilds** event reassigned to that account.
-- ⏭️ Code changes below pending your approval.
+Mirror the organizer demo experience on the attendee side. After the judge signs out as organizer on `/join/$eventId`, they click **"I'm here for the demo"** → land as a demo attendee on the Shebuilds event → fill their profile → reach a dashboard pre-populated with 20 fake attendees → tap into a fake profile → get a friendly "this is demo data" notice instead of opening LinkedIn.
 
-## Code changes
+Everything stays behind the existing `DEMO_MODE_ENABLED` flag so we can switch it off after the hackathon.
 
-### 1. New file — `src/lib/demo-mode.ts`
-The kill switch + shared sign-in helper:
-```ts
-export const DEMO_MODE_ENABLED = true; // flip to false after the hackathon
+## Flow
+
+```text
+/join/<shebuilds>  (after sign-out)
+   └─ "I'm here for the demo →"
+        ├─ signs in as demo-attendee@taba.events
+        ├─ ensures membership on Shebuilds
+        └─ /event/<shebuilds>/profile     ← judge fills their goals
+              └─ Find people
+                   └─ /event/<shebuilds>/  ← dashboard, 20 seeded peers
+                        └─ tap a card → attendee detail
+                             └─ "Say hello on LinkedIn"
+                                  → fake-profile guard:
+                                    toast "Demo data — we can't actually
+                                    send a LinkedIn message."
 ```
-Also exports `signInAsDemoOrganizer()` — signs out any current user, signs in as the demo account, returns success/failure (toasts on error).
 
-### 2. `src/routes/index.tsx` — homepage
-Add a secondary **"I'm here for the demo →"** button:
-- Next to "Join as organizer" in the hero
-- Next to "Join as organizer" in the final CTA section
+## Changes
 
-Both wrapped in `{DEMO_MODE_ENABLED && …}` so flipping the flag removes them everywhere. Clicking either runs `signInAsDemoOrganizer()` then `navigate("/organizer")`.
+### 1. `src/lib/demo-mode.ts`
+- Add `DEMO_ATTENDEE_EMAIL = "demo-attendee@taba.events"`, `DEMO_ATTENDEE_PASSWORD`, fixed UUID `DEMO_ATTENDEE_ACCOUNT_ID`.
+- Add `signInAsDemoAttendee()` helper (signs out, signs in with password, returns ok/false + toast).
+- Add `FAKE_PROFILE_MARKER = "__demo_fake__"` — value we'll stuff into the seeded accounts' `linkedin_handle` so the UI can detect "this is fake data".
+- Add `isDemoFakeProfile(linkedinHandle)` helper.
 
-### 3. `src/routes/auth.tsx` — organizer sign-in page
-Replace the current blue "Demo access — use any email with password Tabaevent123" info box with a real primary button:
-> **I'm here for the demo →**
+### 2. Database — one migration + one data insert
 
-Gated by `DEMO_MODE_ENABLED`. Below it: divider, then the unchanged Continue with Google + email/password form for real organizers.
+**Migration:** none needed (no schema changes). All seeding done via the `insert` tool.
 
-### 4. `src/routes/_authenticated/organizer.tsx` — dashboard hint
-When the signed-in email is `demo@taba.events`, show a friendly banner above the events list:
-> 👋 You're in the demo. Open **Shebuilds** below, then click **Share** to get the attendee join link.
+**Data seed (insert tool):**
+- Create `demo-attendee@taba.events` in `auth.users` + `auth.identities` + `public.accounts` (same pattern used for the demo organizer), with a blank profile so the judge fills it.
+- Insert 20 `accounts` rows with realistic fake names, roles, companies, industries, languages — each with `linkedin_handle = '__demo_fake__'`.
+- Insert 20 matching `event_memberships` rows on the Shebuilds event, each with diverse `goal_tags` (drawn from `INTEREST_TAGS`), varied `looking_for` / `give_back` copy, and `open_to_connect` mostly true.
 
-No structural change; pure presentational hint so judges know the next click.
+These rows are idempotent-guarded with fixed UUIDs so re-running the seed doesn't duplicate.
 
-## Demo script
-1. Homepage → **I'm here for the demo**
-2. Lands on `/organizer` as demo user → sees Shebuilds card with banner
-3. Click **Share** → copy attendee join link / scan QR
-4. Open the join link on a phone → real attendee flow (Google sign-in) → profile → matches
+### 3. `src/routes/join.$eventId.tsx`
+- Import `DEMO_MODE_ENABLED`, `signInAsDemoAttendee`, `DEMO_EVENT_ID`.
+- In the **no-session** branch (and also the **organizer "Sign out & join as attendee"** branch after sign-out), render a primary **"I'm here for the demo →"** button above the Google/magic-link form, only when `DEMO_MODE_ENABLED && eventId === DEMO_EVENT_ID`.
+- On click: `signInAsDemoAttendee()` → `ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID)` → lands on `/event/<id>/profile`.
+- Small caption under the button: "One-click demo attendee — you'll fill a quick profile next."
 
-## Turning the demo off later
-Just tell me "disable demo mode" and I'll flip `DEMO_MODE_ENABLED` to `false`. All three buttons disappear instantly, the demo account stays in the DB harmlessly.
+### 4. `src/routes/_authenticated/event.$eventId.attendee.$membershipId.tsx`
+- When `linkedin_handle === FAKE_PROFILE_MARKER`, render the CTA as a plain button (not `<a href>`), and on click show a toast: **"Demo data — we can't actually send a LinkedIn message. Try the message copy instead."**
+- Keep the "Copy message" path unchanged.
+- Hide/replace the LinkedIn URL hint so we never produce `linkedin.com/in/__demo_fake__`.
+
+### 5. (Optional polish) Dashboard banner
+In `event.$eventId.index.tsx`, when the signed-in user is the demo attendee, show a one-line banner under the header: "Demo mode — these attendees are fictional." No behavior change.
 
 ## Out of scope
-- Attendee flow unchanged (still Google / magic link).
-- No RLS or schema changes.
-- No new public/anonymous routes.
+
+- No changes to organizer flow, RLS, or schema.
+- No new routes.
+- Real attendees on other events are unaffected — the demo button only appears on the Shebuilds event.
+- Messaging (`messages` table) untouched.
+
+## Kill switch
+
+Set `DEMO_MODE_ENABLED = false` in `src/lib/demo-mode.ts` → both organizer and attendee demo buttons disappear; seeded fake attendees remain in the DB until manually removed (I'll provide a cleanup SQL on request).

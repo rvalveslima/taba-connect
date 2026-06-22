@@ -11,17 +11,21 @@ export const DEMO_ORGANIZER_EMAIL = "demo@taba.events";
 export const DEMO_ORGANIZER_PASSWORD = "Tabaevent123";
 export const DEMO_EVENT_ID = "ea4535bb-930c-47ee-8b59-d54d11a281e6";
 
-/**
- * Signs the current browser into the shared demo organizer account.
- * Returns true on success, false on failure (toast shown).
- */
-export async function signInAsDemoOrganizer(): Promise<boolean> {
+export const DEMO_ATTENDEE_EMAIL = "demo-attendee@taba.events";
+export const DEMO_ATTENDEE_PASSWORD = "Tabaevent123";
+export const DEMO_ATTENDEE_ACCOUNT_ID = "deadbeef-0000-4000-8000-000000000002";
+
+/** Marker stored in seeded fake-attendee `linkedin_handle`. */
+export const FAKE_PROFILE_MARKER = "__demo_fake__";
+
+export function isDemoFakeProfile(linkedinHandle: string | null | undefined): boolean {
+  return linkedinHandle === FAKE_PROFILE_MARKER;
+}
+
+async function signInAs(email: string, password: string): Promise<boolean> {
   try {
     await supabase.auth.signOut();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: DEMO_ORGANIZER_EMAIL,
-      password: DEMO_ORGANIZER_PASSWORD,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return true;
   } catch (err) {
@@ -29,4 +33,12 @@ export async function signInAsDemoOrganizer(): Promise<boolean> {
     toast.error(msg);
     return false;
   }
+}
+
+export function signInAsDemoOrganizer(): Promise<boolean> {
+  return signInAs(DEMO_ORGANIZER_EMAIL, DEMO_ORGANIZER_PASSWORD);
+}
+
+export function signInAsDemoAttendee(): Promise<boolean> {
+  return signInAs(DEMO_ATTENDEE_EMAIL, DEMO_ATTENDEE_PASSWORD);
 }
