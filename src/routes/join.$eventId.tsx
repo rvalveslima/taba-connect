@@ -32,15 +32,14 @@ export const Route = createFileRoute("/join/$eventId")({
     ],
   }),
   loader: async ({ params }) => {
-    const { data, error } = await supabase
-      .from("events")
-      .select("id, name, date_start, date_end, image_url, organizer_account_id")
-      .eq("id", params.eventId)
-      .maybeSingle();
-    if (error || !data) {
+    const { data, error } = await supabase.rpc("get_event_public_info", {
+      _event_id: params.eventId,
+    });
+    const row = Array.isArray(data) ? data[0] : data;
+    if (error || !row) {
       throw redirect({ to: "/" });
     }
-    return { event: data as EventRow };
+    return { event: row as EventRow };
   },
   errorComponent: ({ error, reset }) => (
     <RouteErrorFallback
