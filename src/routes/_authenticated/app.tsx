@@ -26,7 +26,9 @@ type EventRow = {
 function AppHome() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [rows, setRows] = useState<EventRow[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
   const [codeBusy, setCodeBusy] = useState(false);
