@@ -362,8 +362,11 @@ function JoinPage() {
               </form>
             </>
           )}
-        </section>
+          </section>
+        </div>
       </div>
+
+
 
       <style>{`
         .input {
