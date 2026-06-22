@@ -33,8 +33,6 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "sign-in" | "sign-up";
 
-const ORGANIZER_DEMO_PASSWORD = "Tabaevent123";
-
 function AuthPage() {
   const navigate = useNavigate();
   const { as } = Route.useSearch();
@@ -45,12 +43,6 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  // Prefill the demo password on the client only (avoids SSR/CSR hydration mismatch).
-  useEffect(() => {
-    if (isOrganizer) {
-      setPassword((prev) => (prev ? prev : ORGANIZER_DEMO_PASSWORD));
-    }
-  }, [isOrganizer]);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,33 +76,7 @@ function AuthPage() {
     setInfo(null);
     setLoading(true);
     try {
-      if (isOrganizer) {
-        // Demo: try sign in first, auto sign-up on invalid credentials.
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (signInError) {
-          const msg = signInError.message.toLowerCase();
-          if (msg.includes("invalid") || msg.includes("credentials")) {
-            const { data, error: signUpError } = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                emailRedirectTo: window.location.origin,
-                data: { name: email.split("@")[0] },
-              },
-            });
-            if (signUpError) throw signUpError;
-            if (!data.session) {
-              setInfo("Check your email to confirm your account, then come back to sign in.");
-              return;
-            }
-          } else {
-            throw signInError;
-          }
-        }
-      } else if (mode === "sign-up") {
+      if (mode === "sign-up" && !isOrganizer) {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
