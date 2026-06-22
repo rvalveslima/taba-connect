@@ -54,6 +54,10 @@ function ProfilePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [addingTag, setAddingTag] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
+  const tagInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (addingTag) tagInputRef.current?.focus();
+  }, [addingTag]);
   const [lookingFor, setLookingFor] = useState("");
   const [giveBack, setGiveBack] = useState("");
   const [openToConnect, setOpenToConnect] = useState(true);
@@ -460,6 +464,10 @@ function LanguagesPicker({
 }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const langInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (adding) langInputRef.current?.focus();
+  }, [adding]);
 
   function remove(lang: string) {
     onChange(value.filter((l) => l !== lang));
