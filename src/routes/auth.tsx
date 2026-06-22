@@ -135,10 +135,11 @@ function AuthPage() {
       }
       navigate({ to: postAuthTarget, replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(friendlyError(err, "Sign-in didn't work. Double-check your email and password."));
     } finally {
       setLoading(false);
     }
+
   }
 
   async function handleMagicLink(e: React.FormEvent) {
@@ -157,7 +158,8 @@ function AuthPage() {
       if (otpErr) throw otpErr;
       setMagicLinkSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send magic link.");
+      setError(friendlyError(err, "We couldn't send your magic link. Double-check your email."));
+
     } finally {
       setLoading(false);
     }
@@ -177,7 +179,8 @@ function AuthPage() {
       setInfo("Check your email for a reset link.");
       setForgotMode(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send reset email.");
+      setError(friendlyError(err, "We couldn't send the reset email. Try again in a moment."));
+
     } finally {
       setLoading(false);
     }
@@ -190,10 +193,11 @@ function AuthPage() {
       redirect_uri: `${window.location.origin}${postAuthTarget}`,
     });
     if (result.error) {
-      setError(result.error.message);
+      setError(friendlyError(result.error, "Google sign-in didn't work. Try again or use a magic link."));
       setLoading(false);
       return;
     }
+
     if (result.redirected) return;
     navigate({ to: postAuthTarget, replace: true });
   }
