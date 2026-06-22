@@ -270,14 +270,55 @@ function DashboardPage() {
           </button>
         </div>
 
-        <p className="text-xs text-muted-foreground">sorted by overlap ↓</p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>sorted by overlap ↓</span>
+          {!loading && (
+            <span>
+              {visible.length === attendees.length
+                ? `${attendees.length} ${attendees.length === 1 ? "attendee" : "attendees"}`
+                : `${visible.length} of ${attendees.length} attendees`}
+            </span>
+          )}
+        </div>
 
         {/* Attendee list */}
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading attendees…</p>
+          <ul className="space-y-3" aria-busy="true" aria-label="Loading attendees">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <li
+                key={i}
+                className="rounded-2xl border border-border bg-card p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="h-11 w-11 shrink-0 rounded-full bg-muted/70 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-1/3 rounded bg-muted/70 animate-pulse" />
+                    <div className="h-3 w-2/3 rounded bg-muted/60 animate-pulse" />
+                    <div className="mt-3 flex gap-1">
+                      {Array.from({ length: OVERLAP_BAR_SEGMENTS }).map((_, j) => (
+                        <span key={j} className="h-1.5 flex-1 rounded-full bg-muted/60 animate-pulse" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : visible.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center space-y-3">
             <p className="text-sm text-muted-foreground">No attendees match these filters.</p>
+            <button
+              onClick={() => {
+                setRoleFilter("all");
+                setCompanyFilter("all");
+                setGoalFilter("all");
+                setLanguageFilter("all");
+                setOpenOnly(false);
+              }}
+              className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Clear all filters
+            </button>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -394,19 +435,36 @@ function FilterPill({
 
   return (
     <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition ${
+      <div
+        className={`inline-flex items-center rounded-full border text-xs transition ${
           active
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-card text-foreground hover:border-foreground/40"
         }`}
       >
-        <span>{active ? activeLabel : label}</span>
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5"
+        >
+          <span>{active ? `${label}: ${activeLabel}` : label}</span>
+          {!active && (
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+        {active && (
+          <button
+            onClick={() => onChange("all")}
+            aria-label={`Clear ${label} filter`}
+            className="pr-2.5 pl-1 py-1.5 opacity-80 hover:opacity-100"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M2 2l6 6M8 2l-6 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
       {open && (
         <div className="absolute left-0 top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
           <button
