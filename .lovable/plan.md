@@ -1,35 +1,47 @@
 ## Goal
 
-When an organizer clicks **Open** on their event card in `/organizer`, send them to a dedicated event overview page that shows branding, dates, attendee count, and LinkedIn-messages-sent count. Demo-only: use fake numbers for the LinkedIn count.
+Add a "Questions or feedback?" form to the bottom of the organizer dashboard (`src/routes/_authenticated/organizer.tsx`), below the events list. Only signed-in organizers see it.
 
-## Changes
+## UI (matches your screenshot)
 
-### 1. New route: `src/routes/_authenticated/event.$eventId.overview.tsx`
+A collapsible card sitting under the events list, expanded by default:
 
-URL: `/event/$eventId/overview`. Organizer-facing details page.
+- Header row: chat-bubble icon + "Questions or feedback?" title + chevron toggle
+- `Subject (optional)` — single-line input, max 120 chars
+- `Write your message here…` — textarea, required, 1–2000 chars
+- Peach `Send message` button with paper-plane icon, disabled while submitting
+- On success: collapse the form and show an inline "Thanks — we read every message." confirmation; toast on failure
+- Styled with the dashboard's existing tokens (cream card, peach primary) so it fits the page
 
-Loads from existing tables (no schema changes):
-- `events` → `name`, `date_start`, `date_end`, `image_url`, `organizer_account_id`
-- `get_event_code` RPC → event code
-- `event_memberships` count → real attendees subscribed
+Validation with zod (trim + length limits), errors shown inline.
 
-Shows:
-- Cover image (or branded placeholder) + event name
-- Date range (formatted, e.g. "Mar 12 – Mar 14, 2026")
-- Event code chip
-- Two stat cards:
-  - **Attendees subscribed** — real count from `event_memberships`
-  - **LinkedIn messages sent** — fake demo number derived deterministically from `eventId` (hash → 30–180 range) so it's stable per event and looks plausible
-- Action row: **Share** (→ `/event/$eventId/share`), **View attendees** (→ `/event/$eventId`), **Edit profile**
+## Backend (Lovable Cloud)
 
-Standard `errorComponent` / `notFoundComponent` via `RouteErrorFallback` / `RouteNotFoundFallback`. If the current user is not the organizer, redirect to `/event/$eventId` (attendee view).
+New table `public.feedback_messages`:
+- `subject` (text, nullable)
+- `message` (text, required)
+- `account_id` (uuid, references the signed-in organizer)
+- `user_agent` (text, nullable) — for spam triage
+- standard `id`, `created_at`
 
-### 2. `src/routes/_authenticated/organizer.tsx`
+Access rules (plain English):
+- Only signed-in users can submit a message, and the row is always recorded against their own account.
+- Nobody can read, edit, or delete messages from the app — you'll view them in the backend table.
+- Length limits (subject ≤120, message 1–2000) enforced at the database level so the rules can't be bypassed from the client.
 
-Change the **Open** `<Link>` `to` from `/event/$eventId` to `/event/$eventId/overview`. Keep **Share** unchanged.
+Submission path: a `createServerFn` (`src/lib/feedback.functions.ts`) protected by `requireSupabaseAuth`. It re-validates with zod and inserts the row using the user-scoped Supabase client, so RLS applies. No edge function needed.
+
+The email isn't asked in the form — we already know who sent it via `account_id`, and you can join to `accounts` / `auth.users` in the backend if you want to reply.
 
 ## Out of scope
 
-- No new DB tables, columns, or RPCs. LinkedIn count is fake demo data only; clearly labeled.
-- Attendee directory page (`/event/$eventId`) and attendee Open flow stay as they are.
-- No changes to share / profile / attendee detail routes.
+- No admin UI to read messages (view them in the backend table).
+- No email notification on submission (can add later via Brevo/Lovable Emails if you want).
+- Homepage and attendee views are unchanged.
+
+## Files
+
+- new: `src/lib/feedback.functions.ts` — server function for submission
+- new: `src/components/organizer/feedback-card.tsx` — the collapsible form
+- edited: `src/routes/_authenticated/organizer.tsx` — render the card below the events list
+- new migration: `feedback_messages` table + GRANTs + RLS policy + length checks

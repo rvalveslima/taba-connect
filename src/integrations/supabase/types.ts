@@ -139,6 +139,33 @@ export type Database = {
           },
         ]
       }
+      feedback_messages: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          message: string
+          subject: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          message: string
+          subject?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          subject?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string
