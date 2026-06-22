@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_MODE_ENABLED, signInAsDemoOrganizer, signInAsDemoAttendee } from "@/lib/demo-mode";
+import { friendlyError } from "@/lib/supabase-errors";
+import { RouteErrorFallback } from "@/components/route-fallbacks";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -17,8 +19,17 @@ export const Route = createFileRoute("/auth")({
     ],
   }),
   pendingComponent: () => null,
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback
+      error={error}
+      reset={reset}
+      title="Sign-in didn't load"
+      description="Refresh to try again, or head home and come back."
+    />
+  ),
   component: AuthPage,
 });
+
 
 type Mode = "sign-in" | "sign-up";
 

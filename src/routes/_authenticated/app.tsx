@@ -90,7 +90,8 @@ function AppHome() {
       }
       navigate({ to: "/join/$eventId", params: { eventId: data as string } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not look up event.");
+      toast.error(friendlyError(err, "We couldn't look up that code. Try again."));
+
     } finally {
       setCodeBusy(false);
     }
