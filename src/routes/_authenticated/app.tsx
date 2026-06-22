@@ -178,41 +178,37 @@ function AppHome() {
               )}
             </section>
 
-            <section className="rounded-lg border border-dashed border-border bg-card/50 p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Join or host</p>
-                <Link
-                  to="/event/new"
-                  className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
-                >
-                  + Create event
-                </Link>
-              </div>
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <form onSubmit={handleJoinByCode} className="flex flex-1 gap-2">
-                  <input
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="Enter event code"
-                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
-                  />
-                  <button
-                    type="submit"
-                    disabled={codeBusy || !code.trim()}
-                    className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            {userId !== DEMO_ATTENDEE_ACCOUNT_ID && (
+              <section className="rounded-lg border border-dashed border-border bg-card/50 p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Join or host</p>
+                  <Link
+                    to="/event/new"
+                    className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
                   >
-                    Join
-                  </button>
-                </form>
-                <Link
-                  to="/join/$eventId"
-                  params={{ eventId: DEMO_EVENT_ID }}
-                  className="text-xs text-muted-foreground underline hover:text-foreground"
-                >
-                  Try the demo event
-                </Link>
-              </div>
-            </section>
+                    + Create event
+                  </Link>
+                </div>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <form onSubmit={handleJoinByCode} className="flex flex-1 gap-2">
+                    <input
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      placeholder="Enter event code"
+                      className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                    <button
+                      type="submit"
+                      disabled={codeBusy || !code.trim()}
+                      className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                    >
+                      Join
+                    </button>
+                  </form>
+                </div>
+              </section>
+            )}
+
           </>
         )}
       </main>
