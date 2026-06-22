@@ -9,9 +9,6 @@ import { DEMO_ATTENDEE_ACCOUNT_ID, DEMO_EVENT_ID } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/profile")({
   head: () => ({ meta: [{ title: "Your profile — Taba" }] }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    demoSetup: search.demoSetup === true || search.demoSetup === "true" ? true : undefined,
-  }),
   component: ProfilePage,
 });
 
@@ -40,7 +37,6 @@ type Membership = {
 
 function ProfilePage() {
   const { eventId } = Route.useParams();
-  const { demoSetup } = Route.useSearch();
   const navigate = useNavigate();
   const [eventName, setEventName] = useState("");
   const [isOrganizer, setIsOrganizer] = useState(false);
@@ -92,7 +88,10 @@ function ProfilePage() {
       }
       setEventName(ev.name);
       setIsOrganizer(organizer);
-      const isDemoSetup = demoSetup && eventId === DEMO_EVENT_ID && userData.user.id === DEMO_ATTENDEE_ACCOUNT_ID;
+      const isDemoSetup =
+        eventId === DEMO_EVENT_ID &&
+        userData.user.id === DEMO_ATTENDEE_ACCOUNT_ID &&
+        window.sessionStorage.getItem("taba-demo-attendee-profile-setup") === eventId;
       const accWithLangs = isDemoSetup
         ? {
             ...(acc as Account),
@@ -114,7 +113,7 @@ function ProfilePage() {
       setGiveBack(isDemoSetup ? "" : mem.give_back ?? "");
       setOpenToConnect(isDemoSetup ? true : mem.open_to_connect ?? true);
     })();
-  }, [demoSetup, eventId, navigate]);
+  }, [eventId, navigate]);
 
   function toggleTag(t: string) {
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
