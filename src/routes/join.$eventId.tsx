@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   DEMO_MODE_ENABLED,
   DEMO_EVENT_ID,
-  DEMO_ATTENDEE_ACCOUNT_ID,
+  resetDemoAttendeeProfile,
   signInAsDemoAttendee,
 } from "@/lib/demo-mode";
 
@@ -166,7 +166,8 @@ function JoinPage() {
     try {
       const ok = await signInAsDemoAttendee();
       if (!ok) return;
-      await ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID);
+      await resetDemoAttendeeProfile(eventId);
+      navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not start demo.";
       setError(msg);
