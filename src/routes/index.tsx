@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { TabaLogo } from "@/components/taba-logo";
 import { OverlapCircles } from "@/components/overlap-circles";
+import { Reveal } from "@/components/marketing/reveal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -83,37 +84,49 @@ function Hero({ onJoin }: { onJoin: () => void }) {
     <section className="relative overflow-hidden border-b-2 border-foreground">
       {/* Geometric backdrop */}
       <GridLines className="absolute inset-0 h-full w-full" />
-      <ClayCircle className="pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] opacity-95 sm:block" />
-      <CobaltTriangle className="pointer-events-none absolute -bottom-16 left-[8%] hidden h-56 w-56 opacity-90 sm:block" />
-      <InkSquare className="pointer-events-none absolute right-[18%] top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:block" />
+      <ClayCircle className="anim-drift pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] opacity-95 sm:block" />
+      <CobaltTriangle className="anim-float pointer-events-none absolute -bottom-16 left-[8%] hidden h-56 w-56 opacity-90 sm:block" />
+      <InkSquare className="anim-spin pointer-events-none absolute right-[18%] top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-12 lg:gap-8 lg:px-10 lg:py-32">
         <div className="relative lg:col-span-8">
-          <p className="mb-6 inline-block border-2 border-foreground bg-background px-3 py-1 font-display text-xs uppercase tracking-[0.2em]">
-            For event organizers
-          </p>
-          <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
-            The hardest part of networking isn't talking to people.{" "}
-            <span className="text-primary">It's knowing who to talk to.</span>
-          </h1>
-          <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
-            Taba helps you find the people who are{" "}
-            <span className="font-semibold text-foreground">
-              aligned with where you're headed
-            </span>{" "}
-            — so you don't have to guess who's worth approaching.
-          </p>
-
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Button
-              onClick={onJoin}
-              size="lg"
-              className="rounded-none px-7 py-6 font-display text-base uppercase tracking-wider"
-            >
-              Join as organizer →
-            </Button>
+          <div className="mb-8 text-foreground sm:mb-10">
+            <TabaLogo height={84} animateConnect className="sm:hidden" />
+            <TabaLogo height={120} animateConnect className="hidden sm:block" />
           </div>
+          <Reveal variant="fade-up">
+            <p className="mb-6 inline-block border-2 border-foreground bg-background px-3 py-1 font-display text-xs uppercase tracking-[0.2em]">
+              For event organizers
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={120}>
+            <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
+              The hardest part of networking isn't talking to people.{" "}
+              <span className="text-primary">It's knowing who to talk to.</span>
+            </h1>
+          </Reveal>
+          <Reveal variant="fade-up" delay={240}>
+            <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
+              Taba helps you find the people who are{" "}
+              <span className="font-semibold text-foreground">
+                aligned with where you're headed
+              </span>{" "}
+              — so you don't have to guess who's worth approaching.
+            </p>
+          </Reveal>
+
+          <Reveal variant="fade-up" delay={360}>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Button
+                onClick={onJoin}
+                size="lg"
+                className="rounded-none px-7 py-6 font-display text-base uppercase tracking-wider"
+              >
+                Join as organizer →
+              </Button>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
