@@ -84,7 +84,7 @@ function JoinPage() {
   const isOrganizer = !!sessionUserId && sessionUserId === event.organizer_account_id;
 
 
-  async function ensureMembershipAndGo(accountId: string) {
+  async function ensureMembershipAndGo(accountId: string, demoProfileSetup = false) {
     // Idempotent: if a membership already exists for (account, event), just continue.
     const { data: existing } = await supabase
       .from("event_memberships")
@@ -98,6 +98,9 @@ function JoinPage() {
         .from("event_memberships")
         .insert({ event_id: eventId, account_id: accountId, goal_tags: [] });
       if (insertErr) throw insertErr;
+    }
+    if (demoProfileSetup) {
+      window.sessionStorage.setItem("taba-demo-attendee-profile-setup", eventId);
     }
     navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
   }
@@ -166,7 +169,7 @@ function JoinPage() {
     try {
       const ok = await signInAsDemoAttendee();
       if (!ok) return;
-      await ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID);
+      await ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID, true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not start demo.";
       setError(msg);
