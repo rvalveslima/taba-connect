@@ -1,35 +1,38 @@
 ## Goal
-Fix the confusing save error on the attendee profile setup screen (`/event/$eventId/profile`) and make every field required except LinkedIn.
+Run a multi-layered audit of the project to surface bugs, broken flows, security issues, and unclear error messages — then triage the findings with you before fixing anything.
 
-## Changes
+## What I'll run
 
-### 1. `src/lib/profile-validation.ts` — tighten schema
-Make these required (non-empty after trim) for attendees:
-- `name` (already required)
-- `role` — required, max 120
-- `company` — required, max 120
-- `location` — required, max 120
-- `languages` — min 1
-- `goal_tags` — min 3 (matches the existing "Pick 3+ for better matches" hint, promoted from suggestion to requirement)
-- `looking_for` — required, max 500
-- `give_back` — required, max 500
-- `linkedin_handle` — stays optional/nullable
+### 1. Automated scans (parallel, read-only)
+- **Security scan** (`security--run_security_scan`) — RLS gaps, exposed columns, missing policies on public tables.
+- **Database linter** (`supabase--linter`) — config issues, permissive policies, unindexed FKs.
+- **TypeScript/build check** — review the current build output for type errors and unresolved imports.
+- **Dependency scan** — high/critical vulnerabilities in npm packages.
+- **Runtime + console logs review** — recent client errors and warnings from the preview.
+- **Auth logs review** — recent failed sign-ins or auth errors via analytics query.
 
-Each field gets a clear, human message (e.g. "Add your role", "Pick at least 3 goals", "Tell people what you're looking for").
+### 2. End-to-end flow walkthrough (Playwright, headless)
+Drive the live preview and screenshot each step so we can see exactly where things break or where copy is confusing:
+- Landing → organizer demo sign-in → create event → share screen → sign out
+- Landing → `/auth` → attendee demo sign-in → join flow → profile setup (try invalid + valid saves to verify the new error copy) → event home
+- Magic-link path on `/auth` (request only, no inbox check)
+- Sign-out destinations for both roles
 
-### 2. `src/routes/_authenticated/event.$eventId.profile.tsx` — friendlier error UX
-Replace the single generic toast with field-aware feedback on save:
-- Run validation, collect issues, show the FIRST issue as a toast with the exact field label (e.g. "Add your company before continuing").
-- Scroll to / focus the first invalid field so the user sees what's missing.
-- Keep the existing LinkedIn normalize logic (still optional — empty input passes).
-- Organizer flow is unaffected (this route only renders for attendees with a membership; organizers are redirected to `/event/$eventId/share` earlier in the loader).
+### 3. Static code review pass
+Focused read of the highest-risk surfaces for unclear errors / broken flows:
+- All `toast.error(...)` and `throw new Error(...)` call sites — flag any generic "Something went wrong" style messages.
+- All route loaders for missing `errorComponent` / `notFoundComponent`.
+- Server functions / route guards for unauthenticated edge cases.
 
-### 3. Out of scope
-- No DB/schema changes (columns stay nullable; enforcement is client-side validation only, matching the rest of the file).
-- No changes to sign-out, auth, or the share screen.
-- No visual redesign of the profile form — only the error messaging and required-field rules.
+## Deliverable
+A single triaged report grouped by severity (Blocker / Bug / Confusing UX / Nit) with:
+- What I observed (with screenshot or log reference)
+- Where it lives (file:line)
+- Suggested fix
 
-## Acceptance
-- Attendee clicks "Find people" with empty fields → sees a clear toast naming the missing field, not a generic error.
-- LinkedIn left blank → save succeeds (assuming all other fields filled).
-- Any other field blank → save blocked with a specific message.
+**No code changes in this pass** — once you see the report, you pick what to fix and I'll do it in follow-up turns.
+
+## Out of scope
+- SEO scan (separate flow, ask if you want it too).
+- Visual/design redesign.
+- Performance profiling.
