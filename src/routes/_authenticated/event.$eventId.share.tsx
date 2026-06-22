@@ -20,6 +20,12 @@ type EventRow = {
 
 function ShareEventPage() {
   const { eventId } = Route.useParams();
+  const navigate = useNavigate();
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/", replace: true });
+  }
   const [event, setEvent] = useState<EventRow | null>(null);
   const [loading, setLoading] = useState(true);
 
