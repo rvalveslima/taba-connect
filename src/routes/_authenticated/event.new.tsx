@@ -4,11 +4,21 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { TabaLogo } from "@/components/taba-logo";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/supabase-errors";
+import { RouteErrorFallback } from "@/components/route-fallbacks";
 
 export const Route = createFileRoute("/_authenticated/event/new")({
   head: () => ({ meta: [{ title: "Create event — Taba" }] }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback
+      error={error}
+      reset={reset}
+      title="We couldn't open the create-event form"
+    />
+  ),
   component: CreateEventPage,
 });
+
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
@@ -93,11 +103,18 @@ function CreateEventPage() {
         const { error: upErr } = await supabase.storage
           .from("event-images")
           .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
-        if (upErr) throw upErr;
+        if (upErr) {
+          // Tag the error so the catch below can show an image-specific message.
+          (upErr as { __source?: string }).__source = "image-upload";
+          throw upErr;
+        }
         const { data: signed, error: signErr } = await supabase.storage
           .from("event-images")
           .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-        if (signErr) throw signErr;
+        if (signErr) {
+          (signErr as { __source?: string }).__source = "image-upload";
+          throw signErr;
+        }
         await supabase.from("events").update({ image_url: signed.signedUrl }).eq("id", ev.id);
       }
 
@@ -110,11 +127,16 @@ function CreateEventPage() {
       toast.success("Event created");
       navigate({ to: "/event/$eventId/share", params: { eventId: ev.id } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create event.");
+      const fromUpload = (err as { __source?: string } | null)?.__source === "image-upload";
+      const fallback = fromUpload
+        ? "Image upload failed — try a smaller file or a different image."
+        : "Could not create event. Try again.";
+      toast.error(friendlyError(err, fallback));
     } finally {
       setBusy(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-background">

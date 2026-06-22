@@ -4,14 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ATTENDEE_ACCOUNT_ID } from "@/lib/demo-mode";
+import { friendlyError } from "@/lib/supabase-errors";
+import { RouteErrorFallback } from "@/components/route-fallbacks";
 
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Your events — Taba" }] }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback error={error} reset={reset} title="We couldn't load your events" />
+  ),
   component: AppHome,
 });
+
 
 type EventRow = {
   membership_id: string;

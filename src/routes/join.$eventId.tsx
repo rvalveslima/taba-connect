@@ -4,12 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
+import { friendlyError } from "@/lib/supabase-errors";
+import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
 import {
   DEMO_MODE_ENABLED,
   DEMO_EVENT_ID,
   DEMO_ATTENDEE_ACCOUNT_ID,
   signInAsDemoAttendee,
 } from "@/lib/demo-mode";
+
 
 
 type EventRow = {
@@ -39,13 +42,23 @@ export const Route = createFileRoute("/join/$eventId")({
     }
     return { event: data as EventRow };
   },
-  errorComponent: ({ error }) => (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <p className="text-sm text-muted-foreground">{error.message}</p>
-    </div>
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback
+      error={error}
+      reset={reset}
+      title="We couldn't open this event"
+      description="It may have been removed or the link is broken. Try again or head home."
+    />
+  ),
+  notFoundComponent: () => (
+    <RouteNotFoundFallback
+      title="Event not found"
+      description="That event link is no longer active."
+    />
   ),
   component: JoinPage,
 });
+
 
 function JoinPage() {
   const { event } = Route.useLoaderData();
@@ -119,7 +132,7 @@ function JoinPage() {
       // Tokens set directly — auto-join effect will pick it up.
       await refreshSession();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Google sign-in failed.";
+      const msg = friendlyError(err, "Google sign-in didn't work. Try again or use a magic link.");
       setError(msg);
       toast.error(msg);
     } finally {
@@ -142,7 +155,7 @@ function JoinPage() {
       if (otpErr) throw otpErr;
       setMagicLinkSent(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not send magic link.";
+      const msg = friendlyError(err, "We couldn't send your magic link. Double-check your email and try again.");
       setError(msg);
       toast.error(msg);
     } finally {
@@ -157,7 +170,13 @@ function JoinPage() {
       if (!userData.user) return;
       await ensureMembershipAndGo(userData.user.id);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not join.";
+      // Already-a-member is fine — just continue to the event.
+      const code = (err as { code?: string } | null)?.code;
+      if (code === "23505") {
+        navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
+        return;
+      }
+      const msg = friendlyError(err, "Couldn't add you to the event. Try again in a moment.");
       setError(msg);
       toast.error(msg);
     } finally {
@@ -173,13 +192,14 @@ function JoinPage() {
       if (!ok) return;
       await ensureMembershipAndGo(DEMO_ATTENDEE_ACCOUNT_ID, true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not start demo.";
+      const msg = friendlyError(err, "Demo couldn't start. Refresh and try again.");
       setError(msg);
       toast.error(msg);
     } finally {
       setBusy(false);
     }
   }
+
 
   const showDemoButton = DEMO_MODE_ENABLED && eventId === DEMO_EVENT_ID;
 
