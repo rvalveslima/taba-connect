@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
+import { DEMO_ATTENDEE_ACCOUNT_ID } from "@/lib/demo-mode";
 
-const DEMO_EVENT_ID = "2bb9c0d4-1f73-4a89-9232-9eb65c2b99bf";
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Your events — Taba" }] }),
