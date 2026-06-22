@@ -33,8 +33,6 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "sign-in" | "sign-up";
 
-const ORGANIZER_DEMO_PASSWORD = "Tabaevent123";
-
 function AuthPage() {
   const navigate = useNavigate();
   const { as } = Route.useSearch();
@@ -45,12 +43,6 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  // Prefill the demo password on the client only (avoids SSR/CSR hydration mismatch).
-  useEffect(() => {
-    if (isOrganizer) {
-      setPassword((prev) => (prev ? prev : ORGANIZER_DEMO_PASSWORD));
-    }
-  }, [isOrganizer]);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
