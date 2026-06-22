@@ -1,0 +1,1 @@
+DELETE FROM public.events WHERE id = '061a52f8-2dcd-445a-8882-d9ec743bfcda' AND name = 'efsf';
