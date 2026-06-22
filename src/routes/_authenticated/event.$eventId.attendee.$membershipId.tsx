@@ -6,10 +6,19 @@ import { OverlapCircles } from "@/components/overlap-circles";
 import { toast } from "sonner";
 import { isDemoFakeProfile } from "@/lib/demo-mode";
 
+import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
+
 export const Route = createFileRoute("/_authenticated/event/$eventId/attendee/$membershipId")({
   head: () => ({ meta: [{ title: "Reach out — Taba" }] }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback error={error} reset={reset} title="We couldn't load that attendee" />
+  ),
+  notFoundComponent: () => (
+    <RouteNotFoundFallback title="Attendee not found" description="They may have left the event." />
+  ),
   component: DecisionPage,
 });
+
 
 type Profile = {
   membership_id: string;

@@ -195,7 +195,7 @@ function ProfilePage() {
       toast.success("Profile saved");
       navigate({ to: "/event/$eventId", params: { eventId } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save profile.");
+      toast.error(friendlyError(err, "Couldn't save your profile. Try again in a moment."));
     } finally {
       setSaving(false);
     }
