@@ -50,6 +50,23 @@ function AppHome() {
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
   const [codeBusy, setCodeBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const callDeleteAccount = useServerFn(deleteMyAccount);
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      await callDeleteAccount();
+      await supabase.auth.signOut();
+      toast.success("Your account has been deleted.");
+      navigate({ to: "/", replace: true });
+    } catch (err) {
+      toast.error(friendlyError(err, "We couldn't delete your account. Try again."));
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
