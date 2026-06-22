@@ -433,6 +433,12 @@ function AuthPage() {
                 <p className="text-center text-xs text-muted-foreground">
                   We'll email you a one-tap link. Delivery can be slow — check Spam/Promotions.
                 </p>
+                <p className="text-center text-xs text-muted-foreground">
+                  By continuing, you agree to our{" "}
+                  <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                    Terms & Code of Conduct
+                  </Link>.
+                </p>
               </form>
             )}
           </>
