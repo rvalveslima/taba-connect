@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ORGANIZER_EMAIL } from "@/lib/demo-mode";
 import { RouteErrorFallback } from "@/components/route-fallbacks";
+import { FeedbackCard } from "@/components/organizer/feedback-card";
 
 export const Route = createFileRoute("/_authenticated/organizer")({
   head: () => ({ meta: [{ title: "Your events — Taba" }] }),
