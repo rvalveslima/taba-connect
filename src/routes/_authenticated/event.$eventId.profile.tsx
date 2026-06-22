@@ -38,6 +38,7 @@ function ProfilePage() {
   const { eventId } = Route.useParams();
   const navigate = useNavigate();
   const [eventName, setEventName] = useState("");
+  const [isOrganizer, setIsOrganizer] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [tags, setTags] = useState<string[]>([]);
