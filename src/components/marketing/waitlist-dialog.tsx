@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/supabase-errors";
+
 
 const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
@@ -51,7 +53,7 @@ export function WaitlistDialog({
         toast.success("You're already on the list — we'll be in touch.");
         return;
       }
-      toast.error("Something went wrong. Try again?");
+      toast.error(friendlyError(error, "We couldn't add you to the waitlist. Try again."));
       return;
     }
     setDone(true);

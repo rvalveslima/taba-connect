@@ -3,11 +3,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TabaLogo } from "@/components/taba-logo";
 import { SharePanel } from "@/components/share-panel";
+import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/share")({
   head: () => ({ meta: [{ title: "Share your event — Taba" }] }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback error={error} reset={reset} title="We couldn't open the share screen" />
+  ),
+  notFoundComponent: () => (
+    <RouteNotFoundFallback title="Event not found" description="That event is no longer active." />
+  ),
   component: ShareEventPage,
 });
+
 
 type EventRow = {
   id: string;
