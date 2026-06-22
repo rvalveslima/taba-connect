@@ -52,7 +52,7 @@ function ShareEventPage() {
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
           <Link to="/organizer" className="text-sm text-muted-foreground hover:text-foreground">← Your events</Link>
           <Link to="/organizer"><TabaLogo height={36} /></Link>
-          <Link to="/organizer" className="text-sm text-muted-foreground hover:text-foreground">Done</Link>
+          <button type="button" onClick={handleSignOut} className="text-sm text-muted-foreground hover:text-foreground">Sign out</button>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-5 py-10 space-y-6">
