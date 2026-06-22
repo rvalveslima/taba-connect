@@ -167,9 +167,22 @@ function DashboardPage() {
     [attendees],
   );
   const languageOptions = useMemo(
-    () => Array.from(new Set(attendees.flatMap((a) => a.languages))).sort(),
-    [attendees],
+    () => [
+      { value: "en", label: "English" },
+      { value: "fr", label: "French" },
+      { value: "pt", label: "Portuguese" },
+      { value: "es", label: "Spanish" },
+      { value: "de", label: "German" },
+    ],
+    [],
   );
+  const LANG_ALIASES: Record<string, string[]> = {
+    en: ["en", "english"],
+    fr: ["fr", "french", "français", "francais"],
+    pt: ["pt", "portuguese", "português", "portugues"],
+    es: ["es", "spanish", "español", "espanol"],
+    de: ["de", "german", "deutsch"],
+  };
   const companyOptions = useMemo(
     () => Array.from(new Set(attendees.map((a) => a.company).filter((v): v is string => !!v?.trim()))).sort(),
     [attendees],
