@@ -200,15 +200,10 @@ function ProfilePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-4">
-          <Link
-            to={isOrganizer ? "/event/$eventId/share" : "/event/$eventId"}
-            params={{ eventId }}
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            ← {eventName || "Back"}
-          </Link>
+          <div />
           <TabaLogo height={44} />
         </div>
+
       </header>
 
       <form onSubmit={handleSave} className="mx-auto max-w-2xl space-y-6 px-5 py-8 pb-32">
