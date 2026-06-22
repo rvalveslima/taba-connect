@@ -6,18 +6,21 @@ const trim = (s: unknown) => (typeof s === "string" ? s.trim() : s);
 
 
 export const profileSchema = z.object({
-  name: z.preprocess(trim, z.string().min(1, "Name is required").max(100, "Name is too long")),
-  role: z.preprocess(trim, z.string().max(120, "Role is too long").optional().nullable()),
-  company: z.preprocess(trim, z.string().max(120, "Company is too long").optional().nullable()),
-  location: z.preprocess(trim, z.string().max(120, "Location is too long").optional().nullable()),
+  name: z.preprocess(trim, z.string().min(1, "Add your name before continuing.").max(100, "Name is too long.")),
+  role: z.preprocess(trim, z.string().min(1, "Add your role before continuing.").max(120, "Role is too long.")),
+  company: z.preprocess(trim, z.string().min(1, "Add your company before continuing.").max(120, "Company is too long.")),
+  location: z.preprocess(trim, z.string().min(1, "Add your location before continuing.").max(120, "Location is too long.")),
   linkedin_handle: z.preprocess(trim, z.string().max(200).optional().nullable()),
-  languages: z.array(z.string().trim().min(1).max(40)).max(20, "Too many languages"),
+  languages: z
+    .array(z.string().trim().min(1).max(40))
+    .min(1, "Add at least one language.")
+    .max(20, "Too many languages."),
   goal_tags: z
     .array(z.string().trim().min(1, "Tag is empty").max(40, "Tag is too long"))
-    .max(30, "Too many tags"),
-
-  looking_for: z.preprocess(trim, z.string().max(500, "Keep it under 500 characters").optional().nullable()),
-  give_back: z.preprocess(trim, z.string().max(500, "Keep it under 500 characters").optional().nullable()),
+    .min(3, "Pick at least 3 goals so we can match you.")
+    .max(30, "Too many tags."),
+  looking_for: z.preprocess(trim, z.string().min(1, "Tell people what you're looking for.").max(500, "Keep it under 500 characters.")),
+  give_back: z.preprocess(trim, z.string().min(1, "Share what you can give back.").max(500, "Keep it under 500 characters.")),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
