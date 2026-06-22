@@ -177,7 +177,7 @@ function OrganizerHome() {
                       Share
                     </Link>
                     <Link
-                      to="/event/$eventId"
+                      to="/event/$eventId/overview"
                       params={{ eventId: ev.id }}
                       className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
                     >

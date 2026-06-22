@@ -1,21 +1,35 @@
-
 ## Goal
 
-On the attendee match page (`src/routes/_authenticated/event.$eventId.attendee.$membershipId.tsx`), show every shared goal tag explicitly instead of truncating to "Product and Design +1 more", and have each shared goal count as its own "thing in common".
+When an organizer clicks **Open** on their event card in `/organizer`, send them to a dedicated event overview page that shows branding, dates, attendee count, and LinkedIn-messages-sent count. Demo-only: use fake numbers for the LinkedIn count.
 
 ## Changes
 
-**File:** `src/routes/_authenticated/event.$eventId.attendee.$membershipId.tsx`
+### 1. New route: `src/routes/_authenticated/event.$eventId.overview.tsx`
 
-1. **`commonGroundBullets(me, them, overlap)`** — rewrite so it returns one bullet per shared goal, plus a bullet per shared language (non-English prioritized), plus an industry bullet when matching. Drop the "+N more" truncation and the `.slice(0, 3)` cap.
-   - One bullet per overlap tag: `Both focused on {tag}`
-   - One bullet per shared language: `Both speak {lang}`
-   - One bullet for shared industry: `Both in {industry}`
+URL: `/event/$eventId/overview`. Organizer-facing details page.
 
-2. **Count** — the `OverlapCircles count={bullets.length}` and the "{N} things in common" label already use `bullets.length`, so once bullets are 1-per-match the count updates automatically and each goal counts toward the total.
+Loads from existing tables (no schema changes):
+- `events` → `name`, `date_start`, `date_end`, `image_url`, `organizer_account_id`
+- `get_event_code` RPC → event code
+- `event_memberships` count → real attendees subscribed
 
-3. Keep the rest of the page (Wants/Gives, "One thing to ask about", suggested message, CTA) unchanged.
+Shows:
+- Cover image (or branded placeholder) + event name
+- Date range (formatted, e.g. "Mar 12 – Mar 14, 2026")
+- Event code chip
+- Two stat cards:
+  - **Attendees subscribed** — real count from `event_memberships`
+  - **LinkedIn messages sent** — fake demo number derived deterministically from `eventId` (hash → 30–180 range) so it's stable per event and looks plausible
+- Action row: **Share** (→ `/event/$eventId/share`), **View attendees** (→ `/event/$eventId`), **Edit profile**
+
+Standard `errorComponent` / `notFoundComponent` via `RouteErrorFallback` / `RouteNotFoundFallback`. If the current user is not the organizer, redirect to `/event/$eventId` (attendee view).
+
+### 2. `src/routes/_authenticated/organizer.tsx`
+
+Change the **Open** `<Link>` `to` from `/event/$eventId` to `/event/$eventId/overview`. Keep **Share** unchanged.
 
 ## Out of scope
 
-No schema changes. No changes to the home grid card preview. Suggested message opener still uses the top 2 overlapping tags to keep the message short.
+- No new DB tables, columns, or RPCs. LinkedIn count is fake demo data only; clearly labeled.
+- Attendee directory page (`/event/$eventId`) and attendee Open flow stay as they are.
+- No changes to share / profile / attendee detail routes.
