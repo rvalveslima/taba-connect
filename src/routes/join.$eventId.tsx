@@ -241,6 +241,12 @@ function JoinPage() {
                 We sent a magic link to <span className="font-medium text-foreground">{email}</span>.
                 Open it on this device to finish joining the event.
               </p>
+              <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                Can't find it? Check your <span className="font-medium text-foreground">Spam</span> or{" "}
+                <span className="font-medium text-foreground">Promotions</span> folder — the email comes from a
+                generic no-reply address. For the most reliable sign-in, use{" "}
+                <span className="font-medium text-foreground">Continue with Google</span>.
+              </div>
               <button
                 onClick={() => { setMagicLinkSent(false); setError(null); }}
                 className="text-xs text-muted-foreground underline-offset-2 hover:underline"
@@ -251,14 +257,17 @@ function JoinPage() {
           ) : (
             <>
               <h2 className="mb-2 text-2xl font-semibold">Join this event</h2>
-              <p className="mb-5 text-sm text-muted-foreground">
+              <p className="mb-1 text-sm text-muted-foreground">
                 Sign in to claim your spot. We'll set you up in seconds.
+              </p>
+              <p className="mb-5 text-xs text-muted-foreground">
+                Google is the fastest way in.
               </p>
 
               <button
                 onClick={handleGoogle}
                 disabled={busy}
-                className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                className="mb-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-50"
               >
                 Continue with Google
               </button>
@@ -292,10 +301,13 @@ function JoinPage() {
                 <button
                   type="submit"
                   disabled={busy || !email}
-                  className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
                 >
-                  {busy ? "Sending…" : "Email me a magic link"}
+                  {busy ? "Sending…" : "Email me a magic link instead"}
                 </button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Delivery can be slow — check Spam/Promotions.
+                </p>
               </form>
             </>
           )}
