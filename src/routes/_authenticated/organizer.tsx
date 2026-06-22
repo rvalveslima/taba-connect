@@ -36,22 +36,30 @@ function OrganizerHome() {
 
         const { data: rows } = await supabase
           .from("events")
-          .select("id, name, date_start, date_end, event_code, image_url, created_at")
+          .select("id, name, date_start, date_end, image_url, created_at")
           .eq("organizer_account_id", user.id)
           .order("created_at", { ascending: false });
 
         const list = rows ?? [];
-        const counts = await Promise.all(
+        const enriched = await Promise.all(
           list.map(async (ev) => {
-            const { count } = await supabase
-              .from("event_memberships")
-              .select("id", { count: "exact", head: true })
-              .eq("event_id", ev.id);
-            return count ?? 0;
+            const [{ count }, { data: codeData }] = await Promise.all([
+              supabase
+                .from("event_memberships")
+                .select("id", { count: "exact", head: true })
+                .eq("event_id", ev.id),
+              supabase.rpc("get_event_code", { _event_id: ev.id }),
+            ]);
+            return {
+              ...(ev as Omit<OrganizerEvent, "attendees" | "event_code">),
+              attendees: count ?? 0,
+              event_code: (codeData as string | null) ?? null,
+            };
           }),
         );
 
-        setEvents(list.map((ev, i) => ({ ...(ev as Omit<OrganizerEvent, "attendees">), attendees: counts[i] })));
+        setEvents(enriched);
+
       } finally {
         setLoading(false);
       }
