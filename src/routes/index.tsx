@@ -428,45 +428,47 @@ function PricingTeaser() {
       <InkSquare className="anim-spin pointer-events-none absolute right-[12%] top-12 hidden h-6 w-6 sm:block" />
 
       <div className="relative mx-auto max-w-5xl px-6 py-24 lg:px-10 lg:py-28">
-        <div className="border-2 border-foreground bg-background p-10 lg:p-14">
-          <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
-            05 — Pricing
-          </p>
-          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Pricing for organizers is on the way.
-          </h2>
-          <p className="mt-4 max-w-2xl text-lg text-foreground/80">
-            Join the waitlist to be first to know when plans open up — and to
-            lock in early-access pricing.
-          </p>
-
-          {done ? (
-            <p className="mt-8 font-display text-lg text-foreground">
-              You're on the list. We'll be in touch.
+        <Reveal variant="scale-in">
+          <div className="border-2 border-foreground bg-background p-10 lg:p-14">
+            <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
+              05 — Pricing
             </p>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="mt-8 flex flex-col gap-3 sm:flex-row"
-            >
-              <Input
-                type="email"
-                required
-                placeholder="you@yourevent.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12 rounded-none border-2 border-foreground bg-background sm:flex-1"
-              />
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="h-12 rounded-none px-7 font-display uppercase tracking-wider"
+            <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+              Pricing for organizers is on the way.
+            </h2>
+            <p className="mt-4 max-w-2xl text-lg text-foreground/80">
+              Join the waitlist to be first to know when plans open up — and to
+              lock in early-access pricing.
+            </p>
+
+            {done ? (
+              <p className="mt-8 font-display text-lg text-foreground">
+                You're on the list. We'll be in touch.
+              </p>
+            ) : (
+              <form
+                onSubmit={handleSubmit}
+                className="mt-8 flex flex-col gap-3 sm:flex-row"
               >
-                {submitting ? "Adding…" : "Notify me"}
-              </Button>
-            </form>
-          )}
-        </div>
+                <Input
+                  type="email"
+                  required
+                  placeholder="you@yourevent.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 rounded-none border-2 border-foreground bg-background sm:flex-1"
+                />
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="h-12 rounded-none px-7 font-display uppercase tracking-wider"
+                >
+                  {submitting ? "Adding…" : "Notify me"}
+                </Button>
+              </form>
+            )}
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -477,29 +479,35 @@ function PricingTeaser() {
 function FinalCTA({ onJoin }: { onJoin: () => void }) {
   return (
     <section className="relative overflow-hidden bg-primary text-primary-foreground">
-      <div className="pointer-events-none absolute -right-32 -top-32 hidden h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40 sm:block" />
-      <CobaltTriangle className="pointer-events-none absolute left-[10%] bottom-10 hidden h-40 w-40 opacity-90 sm:block" />
+      <div className="anim-drift pointer-events-none absolute -right-32 -top-32 hidden h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40 sm:block" />
+      <CobaltTriangle className="anim-float pointer-events-none absolute left-[10%] bottom-10 hidden h-40 w-40 opacity-90 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto max-w-7xl px-6 py-28 text-center lg:px-10 lg:py-36">
-        <p className="mb-6 font-display text-xs uppercase tracking-[0.3em]">
-          06 — Your village, your event
-        </p>
-        <h2 className="mx-auto max-w-4xl font-display text-5xl font-bold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-          Stop collecting contacts.
-          <br />
-          Start building villages.
-        </h2>
-        <div className="mt-12 flex justify-center">
-          <Button
-            onClick={onJoin}
-            size="lg"
-            variant="secondary"
-            className="rounded-none border-2 border-foreground bg-background px-8 py-6 font-display text-base uppercase tracking-wider text-foreground hover:bg-background/90"
-          >
-            Join as organizer →
-          </Button>
-        </div>
+        <Reveal variant="fade-up">
+          <p className="mb-6 font-display text-xs uppercase tracking-[0.3em]">
+            06 — Your village, your event
+          </p>
+        </Reveal>
+        <Reveal variant="fade-up" delay={120}>
+          <h2 className="mx-auto max-w-4xl font-display text-5xl font-bold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+            Stop collecting contacts.
+            <br />
+            Start building villages.
+          </h2>
+        </Reveal>
+        <Reveal variant="scale-in" delay={280}>
+          <div className="mt-12 flex justify-center">
+            <Button
+              onClick={onJoin}
+              size="lg"
+              variant="secondary"
+              className="rounded-none border-2 border-foreground bg-background px-8 py-6 font-display text-base uppercase tracking-wider text-foreground hover:bg-background/90"
+            >
+              Join as organizer →
+            </Button>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
