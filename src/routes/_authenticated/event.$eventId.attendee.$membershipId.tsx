@@ -365,7 +365,26 @@ function DecisionPage() {
         </section>
 
         {/* CTA */}
-        {linkedinUrl ? (
+        {isDemoFakeProfile(them.linkedin_handle) ? (
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(message);
+              } catch {
+                // ignore
+              }
+              toast.info(
+                "Demo data — we can't actually send a LinkedIn message. The message has been copied so you can see what it would look like.",
+                { duration: 6000 },
+              );
+            }}
+            className="w-full rounded-full px-6 py-4 text-base font-semibold transition hover:opacity-90"
+            style={{ background: "var(--cobalt)", color: "var(--cobalt-foreground)" }}
+          >
+            Say hello on LinkedIn
+          </button>
+        ) : linkedinUrl ? (
           <a
             href={linkedinUrl}
             target="_blank"
