@@ -6,11 +6,20 @@ import { profileSchema, normalizeLinkedin } from "@/lib/profile-validation";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ATTENDEE_ACCOUNT_ID, DEMO_EVENT_ID } from "@/lib/demo-mode";
+import { friendlyError } from "@/lib/supabase-errors";
+import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/profile")({
   head: () => ({ meta: [{ title: "Your profile — Taba" }] }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback error={error} reset={reset} title="We couldn't load your profile" />
+  ),
+  notFoundComponent: () => (
+    <RouteNotFoundFallback title="Event not found" description="That event link is no longer active." />
+  ),
   component: ProfilePage,
 });
+
 
 type Account = {
   id: string;
@@ -186,7 +195,7 @@ function ProfilePage() {
       toast.success("Profile saved");
       navigate({ to: "/event/$eventId", params: { eventId } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save profile.");
+      toast.error(friendlyError(err, "Couldn't save your profile. Try again in a moment."));
     } finally {
       setSaving(false);
     }

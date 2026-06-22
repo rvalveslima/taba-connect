@@ -3,11 +3,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ORGANIZER_EMAIL } from "@/lib/demo-mode";
+import { RouteErrorFallback } from "@/components/route-fallbacks";
 
 export const Route = createFileRoute("/_authenticated/organizer")({
   head: () => ({ meta: [{ title: "Your events — Taba" }] }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback error={error} reset={reset} title="We couldn't load your events" />
+  ),
   component: OrganizerHome,
 });
+
 
 type OrganizerEvent = {
   id: string;

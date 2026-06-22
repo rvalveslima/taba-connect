@@ -16,6 +16,8 @@ import {
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/supabase-errors";
+
 
 
 export const Route = createFileRoute("/")({
@@ -415,8 +417,9 @@ function PricingTeaser() {
       .insert({ email: parsed.data.email, source: "pricing" });
     setSubmitting(false);
     if (error && error.code !== "23505") {
-      toast.error("Something went wrong. Try again?");
+      toast.error(friendlyError(error, "We couldn't add you to the waitlist. Try again."));
       return;
+
     }
     setDone(true);
     toast.success("You're on the list.");

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { overlapTags, INTEREST_TAGS } from "@/lib/interest-tags";
 import { SharePanel } from "@/components/share-panel";
 import { TabaLogo } from "@/components/taba-logo";
+import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
 
 type DashboardSearch = {
   role?: string;
@@ -22,8 +23,15 @@ export const Route = createFileRoute("/_authenticated/event/$eventId/")({
     language: typeof search.language === "string" ? search.language : undefined,
     open: search.open === true || search.open === "true" ? true : undefined,
   }),
+  errorComponent: ({ error, reset }) => (
+    <RouteErrorFallback error={error} reset={reset} title="We couldn't load the attendees" />
+  ),
+  notFoundComponent: () => (
+    <RouteNotFoundFallback title="Event not found" description="That event is no longer active." />
+  ),
   component: DashboardPage,
 });
+
 
 type Attendee = {
   membership_id: string;

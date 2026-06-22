@@ -1,53 +1,69 @@
 
-# Fix the event_code leak (Option A — quick lock-down)
+# Bug pass — error boundaries + friendly Supabase errors
 
-Demo sign-in is **not** the cause and stays exactly as-is. The leak comes from `events.events_select_authenticated USING (true)` + `events.events_select_anon USING (true)`, which let any signed-in (or anonymous) user `SELECT event_code` from every row.
+Three connected fixes. No changes to demo flow, no useEffect→loader refactor (flagged only — separate effort).
 
-Goal: `event_code` is readable **only** by an event's organizer and existing members. Everything else about an event (name, dates, image) stays publicly readable so the `/join/:eventId` share page keeps working.
+## 1. Catch-all error & not-found boundaries via router defaults
 
-## Where event_code is read today
+`__root.tsx` already defines `errorComponent` + `notFoundComponent`, but those only fire when an error reaches the root. Per-route boundaries are needed so a child render/loader failure doesn't blank the screen above it.
 
-| File | Purpose | Allowed after fix? |
-|---|---|---|
-| `routes/_authenticated/organizer.tsx` | Organizer dashboard lists their own events with the code | ✅ organizer is owner |
-| `routes/_authenticated/event.$eventId.share.tsx` | Organizer share screen shows the code | ✅ organizer is owner |
-| `routes/_authenticated/event.$eventId.index.tsx` | Event home shows the code to members | ✅ caller is a member |
-| `routes/_authenticated/app.tsx` (`handleJoinByCode`) | Logged-in user types a code to find the event | ✅ via RPC below |
-| `routes/join.$eventId.tsx` (loader) | Public join page reads name/image/dates by id | ✅ doesn't touch `event_code` |
+The `_authenticated/route.tsx` layout is integration-managed (do not author). Instead:
 
-## Database changes (single migration)
+- **`src/router.tsx`** — add `defaultErrorComponent` and `defaultNotFoundComponent` on `createRouter(...)`. These are inherited by every child route that doesn't define its own (including the managed `_authenticated` subtree). Components live in a new `src/components/route-fallbacks.tsx` and share the same look as the root fallbacks (branded card, "Try again" → `router.invalidate() + reset()`, "Go home" → `/`).
+- **`src/routes/auth.tsx`** — add `errorComponent` (specifically for sign-in failures — friendly copy + "Back to sign in" / "Go home"). No loader, so no `notFoundComponent` needed.
+- **`src/routes/_authenticated/app.tsx`**, **`event.new.tsx`**, **`event.$eventId.index.tsx`**, **`event.$eventId.share.tsx`**, **`event.$eventId.profile.tsx`**, **`event.$eventId.attendee.$membershipId.tsx`**, **`organizer.tsx`** — add `errorComponent` (and `notFoundComponent` where the route reads a `$param` so a missing record can render a real page instead of bubbling). Each boundary is a one-liner that renders a shared `<RouteErrorFallback>` / `<RouteNotFoundFallback>` from `route-fallbacks.tsx`.
 
-1. **Revoke column-level read on `event_code`** from `anon` and `authenticated`:
-   ```sql
-   REVOKE SELECT (event_code) ON public.events FROM anon, authenticated;
-   ```
-   Other columns (`id, name, date_start, date_end, image_url, organizer_account_id, created_at`) stay readable under the existing row policies, so the public join page and the in-app dashboards keep working.
+These routes mostly fetch in `useEffect` today, so the boundary catches render-time throws and any future loader work — covered without forcing the refactor.
 
-2. **`get_event_code(_event_id uuid) returns text`** — `SECURITY DEFINER`, returns the code only if `auth.uid()` is the organizer or a member; otherwise returns `null`.
-   - Used by: `organizer.tsx` (map over event ids), `event.$eventId.share.tsx`, `event.$eventId.index.tsx`.
+## 2. Map raw Supabase / network errors to friendly copy
 
-3. **`find_event_by_code(_code text) returns uuid`** — `SECURITY DEFINER`, normalizes input (trim + upper), looks up the event id, returns it (or `null`). No column read needed by the client.
-   - Used by: `app.tsx` `handleJoinByCode`.
+New helper **`src/lib/supabase-errors.ts`**:
 
-4. Grant `EXECUTE` on both functions to `authenticated`. `find_event_by_code` is auth-only (matches today's behavior — the join-by-code form is on the authenticated `/app` route).
+```ts
+export function friendlyError(err: unknown, fallback: string): string
+```
 
-## Frontend changes
+Logic (priority order):
 
-- `routes/_authenticated/organizer.tsx` — drop `event_code` from the `select(...)`, then for each event call `supabase.rpc("get_event_code", { _event_id: ev.id })` (or one batched call if we add a plural variant later). Show the code as before.
-- `routes/_authenticated/event.$eventId.share.tsx` — same pattern: select without `event_code`, then `rpc("get_event_code", ...)` for the share panel.
-- `routes/_authenticated/event.$eventId.index.tsx` — same: separate RPC call for the code shown to members.
-- `routes/_authenticated/app.tsx` `handleJoinByCode` — replace the `from("events").select("id").eq("event_code", trimmed)` query with `supabase.rpc("find_event_by_code", { _code: trimmed })`. Toast copy: "No event found for code '<CODE>'." unchanged on `null`.
-- `routes/join.$eventId.tsx` — no change (already doesn't read `event_code`).
+| Detected signal | Friendly message |
+|---|---|
+| `PostgrestError.code === "23505"` (unique_violation) | context-specific override or "You've already done this." |
+| `code === "23503"` (foreign_key) | "We couldn't find that event anymore." |
+| `code === "42501"` or message contains `row-level security` / `permission denied` | "You don't have permission to do that." |
+| `code === "PGRST116"` | "Couldn't find what you were looking for." |
+| `TypeError` with `Failed to fetch` / `NetworkError` / offline | "Network hiccup — check your connection and try again." |
+| Auth: `Invalid login credentials` | "That email and password don't match." |
+| Auth: `User already registered` | "An account with that email already exists — try signing in." |
+| Auth: `Email rate limit exceeded` | "Too many attempts. Wait a minute and try again." |
+| Auth: `Email not confirmed` | "Confirm your email first — check your inbox." |
+| Anything else | `fallback` arg |
+
+In every branch, also `console.error(err)` so the raw message is in the console for debugging — only the toast/UI gets the friendly copy.
+
+## 3. Wire the helper into the four sites
+
+- **`src/routes/join.$eventId.tsx`** — replace the 4 `toast.error(err instanceof Error ? err.message : "...")` calls in `handleGoogle`, `handleMagicLink`, `handleJoinAsCurrentUser`, `handleDemoAttendee` with `toast.error(friendlyError(err, "<context fallback>"))`. Context fallbacks:
+  - Google: "Google sign-in didn't work. Try again or use a magic link."
+  - Magic link: "We couldn't send your magic link. Double-check your email."
+  - Join: "Couldn't add you to the event. Try again in a moment."
+  - Demo: "Demo couldn't start. Refresh and try again."
+  - Special case: in `handleJoinAsCurrentUser`, if `insertErr.code === "23505"` (already a member), don't toast — just navigate to `/event/$eventId/profile` (idempotent join).
+
+- **`src/routes/_authenticated/event.new.tsx`** (line 113) — replace with `toast.error(friendlyError(err, "Could not create event. Try again."))`. Image-upload errors get an inline context check (if the thrown error came from storage, override fallback with "Image upload failed — try a smaller file.").
+
+- **`src/routes/_authenticated/app.tsx`** (line 91, `handleJoinByCode` catch) — separate the two outcomes:
+  - `data === null` → already shows `toast.error(\`No event found for code "${trimmed}".\`)` (keep).
+  - `error` thrown → `toast.error(friendlyError(err, "We couldn't look up that code. Try again."))` — picks up the network-vs-other distinction.
+
+## Out of scope (flagged only)
+
+- Migrating `useEffect`-based fetches in `_authenticated/*` to TanStack Query loaders. Real improvement (SSR, no flash, caching) but a bigger refactor — tackle in a dedicated pass.
+- Other toast.error sites surfaced in the audit (#6–#9): they'll naturally use `friendlyError` once the helper exists; I'll convert the obvious ones (`waitlist-dialog.tsx`, `attendee.$membershipId.tsx` copy fallback, `event.$eventId.profile.tsx` save) in the same edit since the cost is low. If you'd rather scope this PR tighter, say so and I'll skip them.
 
 ## Verification
 
-- Sign in as **demo attendee** → confirm join-by-code still works → confirm `supabase.from('events').select('event_code')` returns rows with `event_code: null` (column revoked).
-- Sign in as **demo organizer** → confirm dashboard and share screen still display the code.
-- Public `/join/:eventId` page loads name + image without auth.
-- Add a quick psql check: `SELECT has_column_privilege('authenticated', 'public.events', 'event_code', 'SELECT')` → `false`.
-
-## Out of scope
-
-- Demo mode (kept exactly as-is).
-- The other audit items (#2–#10): handled in follow-up turns.
-- Locking `events_select_authenticated` row-policy to "members only" — keeping the broad row read is what lets the public join page and code-lookup keep their current UX without a bigger refactor.
+- Trigger a render throw in one `_authenticated` child (e.g. temporarily throw in component) → confirm the new boundary renders, not a blank screen.
+- Sign in with wrong password on `/auth` → toast reads "That email and password don't match." (not the raw Supabase string).
+- Join an event you're already a member of → no error toast; lands on profile page.
+- Type a junk code in `/app` join-by-code → "No event found…". Disconnect network, retry → network-friendly toast.
+- Create an event with a 10MB image (force upload error) → "Image upload failed…" toast.
