@@ -84,7 +84,7 @@ function JoinPage() {
   const isOrganizer = !!sessionUserId && sessionUserId === event.organizer_account_id;
 
 
-  async function ensureMembershipAndGo(accountId: string) {
+  async function ensureMembershipAndGo(accountId: string, demoProfileSetup = false) {
     // Idempotent: if a membership already exists for (account, event), just continue.
     const { data: existing } = await supabase
       .from("event_memberships")
@@ -99,7 +99,12 @@ function JoinPage() {
         .insert({ event_id: eventId, account_id: accountId, goal_tags: [] });
       if (insertErr) throw insertErr;
     }
-    navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
+    navigate({
+      to: "/event/$eventId/profile",
+      params: { eventId },
+      search: demoProfileSetup ? { demoSetup: true } : undefined,
+      replace: true,
+    });
   }
 
   async function handleGoogle() {
