@@ -1,20 +1,17 @@
-## Problem
+## Fix Language filter on Attendees page
 
-The organizer just signed in (lands on `/organizer`), clicks **+ Create new event**, then clicks **Cancel** on the form. They get dropped on `/app` — the attendee landing page — which makes no sense for an organizer and doesn't match where they came from.
+File: `src/routes/_authenticated/event.$eventId.index.tsx`
 
-## Root cause
+Currently the Language dropdown is built from whatever values exist in `accounts.languages` in the DB, which produces a messy mix (`English`, `Português`, plus raw codes `en`, `fr`, `de`, `ja`, `zh`...).
 
-`src/routes/_authenticated/event.new.tsx` hard-codes its Cancel link (and header logo) to `/app`, regardless of who's using the page. Organizers should bounce back to `/organizer` (their landing page after login).
+### Changes
+1. Replace the dynamic `languageOptions` with a fixed, curated list (value = canonical code, label = display name):
+   - English (`en`)
+   - French (`fr`)
+   - Portuguese (`pt`)
+   - Spanish (`es`)
+   - German (`de`)
+2. Pass `{value,label}` options to `FilterPill` for Language (extend `FilterPill` to accept labeled options, or map at render). Other filters unchanged.
+3. Update the filter predicate so it matches case-insensitively and accepts both the code and the full English name (e.g. selecting `en` matches attendees whose `languages` contains `"en"`, `"English"`, or `"english"`). This handles the inconsistent data already in the DB.
 
-## Fix
-
-In `src/routes/_authenticated/event.new.tsx`:
-- Change the **Cancel** link from `/app` → `/organizer`.
-- Change the header **logo** link from `/app` → `/organizer`.
-
-Only this one file changes. The `/app` route itself stays (it's still the attendee landing page).
-
-## Out of scope
-
-- No changes to attendee flow or to the `/app` route.
-- No changes to post-login routing (already correct: organizers → `/organizer`, attendees → `/app`).
+No DB/schema changes, no other filters touched.
