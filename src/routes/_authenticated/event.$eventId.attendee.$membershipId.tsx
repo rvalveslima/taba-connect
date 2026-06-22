@@ -217,13 +217,13 @@ function DecisionPage() {
 
 
   if (!me || !them) {
-    return <div className="min-h-screen bg-background p-8 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="min-h-dvh bg-background p-8 text-sm text-muted-foreground">Loading…</div>;
   }
 
   const fn = firstName(them.name);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center px-6 py-4">
           <Link

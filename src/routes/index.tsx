@@ -47,7 +47,7 @@ function MarketingPage() {
     navigate({ to: "/auth", search: { as: "organizer" } as never });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <Hero onJoin={goOrganizer} />
       <Problem />
       <VillageStory />

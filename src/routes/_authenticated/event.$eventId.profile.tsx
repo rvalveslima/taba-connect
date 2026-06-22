@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { INTEREST_TAGS } from "@/lib/interest-tags";
 import { profileSchema, normalizeLinkedin } from "@/lib/profile-validation";
@@ -54,6 +54,10 @@ function ProfilePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [addingTag, setAddingTag] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
+  const tagInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (addingTag) tagInputRef.current?.focus();
+  }, [addingTag]);
   const [lookingFor, setLookingFor] = useState("");
   const [giveBack, setGiveBack] = useState("");
   const [openToConnect, setOpenToConnect] = useState(true);
@@ -202,11 +206,11 @@ function ProfilePage() {
   }
 
   if (!account || !membership) {
-    return <div className="min-h-screen bg-background p-8 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="min-h-dvh bg-background p-8 text-sm text-muted-foreground">Loading…</div>;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-4">
           <div />
@@ -343,7 +347,7 @@ function ProfilePage() {
                   </button>
                 ) : (
                   <input
-                    autoFocus
+                    ref={tagInputRef}
                     value={tagDraft}
                     onChange={(e) => setTagDraft(e.target.value)}
                     onKeyDown={(e) => {
@@ -460,6 +464,10 @@ function LanguagesPicker({
 }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const langInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (adding) langInputRef.current?.focus();
+  }, [adding]);
 
   function remove(lang: string) {
     onChange(value.filter((l) => l !== lang));
@@ -503,7 +511,7 @@ function LanguagesPicker({
           </button>
         ) : (
           <input
-            autoFocus
+            ref={langInputRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {

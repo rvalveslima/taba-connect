@@ -139,7 +139,7 @@ function CreateEventPage() {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <header className="border-b border-border/60 bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
           <Link to="/organizer"><TabaLogo height={44} /></Link>
