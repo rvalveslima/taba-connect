@@ -435,19 +435,36 @@ function FilterPill({
 
   return (
     <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition ${
+      <div
+        className={`inline-flex items-center rounded-full border text-xs transition ${
           active
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-card text-foreground hover:border-foreground/40"
         }`}
       >
-        <span>{active ? activeLabel : label}</span>
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5"
+        >
+          <span>{active ? `${label}: ${activeLabel}` : label}</span>
+          {!active && (
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+        {active && (
+          <button
+            onClick={() => onChange("all")}
+            aria-label={`Clear ${label} filter`}
+            className="pr-2.5 pl-1 py-1.5 opacity-80 hover:opacity-100"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M2 2l6 6M8 2l-6 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
+      </div>
       {open && (
         <div className="absolute left-0 top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-xl border border-border bg-card shadow-lg">
           <button
