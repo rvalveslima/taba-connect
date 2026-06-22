@@ -253,6 +253,11 @@ function AuthPage() {
                 ? "Welcome back to your village."
                 : "Start building your village."}
           </p>
+          {!isOrganizer && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Google is the fastest way in.
+            </p>
+          )}
         </div>
 
         {currentEmail && (
