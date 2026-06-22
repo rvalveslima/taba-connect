@@ -1,63 +1,43 @@
-## Plan — bigger animated logo + scroll motion on the homepage
+# Surface Terms & Code of Conduct in the attendee experience
 
-Scoped to the homepage (`src/routes/index.tsx`) and the logo component (`src/components/taba-logo.tsx`). No new dependencies, no changes to other routes, no backend/data changes — so nothing else can break.
+The `/terms` page already exists. The attendee journey has two natural commit points where consent should be visible. Recommendation: add a short, consistent "By joining, you agree to our Terms & Code of Conduct" line directly under the primary action button at each step. Linking (not a checkbox) keeps friction low while still putting the terms in front of every attendee before they commit.
 
-## How I'll keep this safe
+## Where to add it
 
-- **No new libraries.** Pure CSS keyframes + a tiny `useInView` hook using the browser's `IntersectionObserver`. Framer Motion is unnecessary for what you're asking and adds bundle weight.
-- **Logo component stays backward-compatible.** The animation is opt-in via a new prop (`animateConnect?: boolean`, default `false`). Every other place the logo is used today (nav, `/auth`, `/join`) renders exactly as it does now.
-- **Scroll animations degrade gracefully.** If an element isn't observed yet, it starts in its final visible state — so even if JS fails or the observer doesn't fire, content is still readable. Also honors `prefers-reduced-motion` → animations are skipped for users who've opted out.
+1. **`src/routes/join.$eventId.tsx`** — the main attendee entry point.
+   - Under the "Join the event" button (signed-in path, ~line 226).
+   - Under the submit button of the inline sign-up / join form (~line 307).
+   - Under the "Continue" button on the email-lookup step (~line 273).
+   - Single shared snippet so the wording stays identical.
 
-## Change 1 — Logo
+2. **`src/routes/auth.tsx`** — generic signup path (used when attendees create an account outside the join flow).
+   - Under the Sign-up submit button, same snippet.
 
-### `src/components/taba-logo.tsx`
-- Add prop `animateConnect?: boolean` (default false).
-- When true, on mount:
-  - The 3 triad dots fade/scale-in first (~250ms each, staggered).
-  - The 3 connecting lines then "draw in" using `stroke-dasharray` / `stroke-dashoffset` animation (~600ms total).
-  - The 6 ambient dots fade in last at low opacity (~400ms).
-- Total intro ≈ 1.3s, then settles into the static design.
-- Animation runs once per page load — no repeat on re-render.
-- Add a tiny continuous "breathing" pulse on the center bottom dot (~3s loop, very subtle) so the logo feels alive after the intro.
+3. **Footer of `src/routes/index.tsx`** — already public, but add a small "Terms & Code of Conduct" link in the footer for discoverability after the fact. (Optional — confirm if you want this.)
 
-### `src/routes/index.tsx` — Hero
-- Render a large `<TabaLogo height={120} animateConnect />` above the eyebrow ("For event organizers") at the top of the hero column. On mobile, scale down to ~80px.
-- Nav logo stays at its current 32px height (no animation there — only the hero one plays the intro, to avoid double-playing).
+## What the snippet looks like
 
-## Change 2 — Scroll-triggered motion
+```tsx
+<p className="mt-3 text-center text-xs text-muted-foreground">
+  By joining, you agree to our{" "}
+  <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+    Terms & Code of Conduct
+  </Link>.
+</p>
+```
 
-### New file: `src/hooks/use-in-view.ts`
-~25 lines. `useInView(ref, { rootMargin, once })` returns a boolean. Uses `IntersectionObserver`. If the observer API isn't available (or `prefers-reduced-motion` is set), returns `true` immediately so content shows.
+Opens in the same tab (it's a first-party page). `<Link>` from `@tanstack/react-router` so it stays client-side.
 
-### New file: `src/components/marketing/reveal.tsx`
-Tiny wrapper `<Reveal variant="fade-up" | "fade" | "scale-in" | "slide-left" | "slide-right" delay={n}>`. Applies a class that triggers the matching CSS keyframe when the element enters the viewport. Replaces nothing — it just wraps.
+## Why this approach (vs alternatives)
 
-### CSS keyframes (added once to `src/styles.css`)
-- `reveal-fade-up` (translateY 24px → 0, opacity 0 → 1, 700ms ease-out)
-- `reveal-scale-in` (scale 0.85 → 1, opacity 0 → 1, 800ms)
-- `reveal-slide-left` / `reveal-slide-right` (translateX ±40px → 0, 800ms)
-- `float-slow` (translateY ±8px loop, 6s) — for ambient geometric shapes
-- `drift-slow` (translateX/Y small loop, 8s, different phase) — for the big circles
-- `spin-very-slow` (360° in 60s, linear) — applied subtly to one CobaltTriangle
-- All wrapped in `@media (prefers-reduced-motion: reduce) { ... animation: none }`.
-
-### Where motion goes in `index.tsx`
-- **Hero geometric shapes** (`ClayCircle`, `CobaltTriangle`, `InkSquare`): add `float-slow` / `drift-slow` / `spin-very-slow` continuous loops. These are decorative — already `pointer-events-none`. Looped from page load.
-- **Section reveals**: wrap each section's headline + body in `<Reveal variant="fade-up">`; geometric shapes in each section get `<Reveal variant="scale-in" delay={200}>`.
-- **VillageStory big circles**: add `drift-slow` loops; the OverlapCircles diagram gets `scale-in` on enter.
-- **HowItWorks cards**: stagger reveal — card 1 delay 0ms, card 2 delay 120ms, card 3 delay 240ms (fade-up).
-- **PricingTeaser card**: fade-up on enter.
-- **FinalCTA**: fade-up headline, scale-in button.
+- **Inline link under the CTA** (recommended): zero added clicks, legally meaningful because it sits at the moment of consent, matches how Eventbrite / Luma / Partiful handle it.
+- **Required checkbox**: stronger consent record, but adds friction to a flow we're trying to keep one-tap. Recommend only if you want an auditable opt-in.
+- **Modal on first join**: high friction, attendees dismiss without reading. Skip.
 
 ## Out of scope
-- No changes to copy or layout structure.
-- No changes outside the homepage and the logo component.
-- No design-system token changes (colors stay identical).
-- No changes to the waitlist form behavior.
 
-## Risk summary
-- Logo: new prop is opt-in; existing 4 usages untouched → no regression risk.
-- Scroll motion: if the observer ever misbehaves, content defaults to visible. Reduced-motion users get a static page.
-- Bundle size impact: ~1.5 KB (one hook + one wrapper + CSS).
+No changes to `/terms` copy, no new route, no DB column to record acceptance (can add later if you want an audit trail — let me know).
 
-Ready to build when you approve.
+## Open question
+
+Do you want option A (inline link, recommended) or option B (required checkbox that blocks the button until ticked)? And should I add the footer link on the homepage too?
