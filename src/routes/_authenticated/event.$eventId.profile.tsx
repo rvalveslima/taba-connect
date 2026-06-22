@@ -38,6 +38,7 @@ function ProfilePage() {
   const { eventId } = Route.useParams();
   const navigate = useNavigate();
   const [eventName, setEventName] = useState("");
+  const [isOrganizer, setIsOrganizer] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [tags, setTags] = useState<string[]>([]);
@@ -56,7 +57,7 @@ function ProfilePage() {
         return;
       }
       const [{ data: ev }, { data: acc }, { data: mem }] = await Promise.all([
-        supabase.from("events").select("name").eq("id", eventId).maybeSingle(),
+        supabase.from("events").select("name, organizer_account_id").eq("id", eventId).maybeSingle(),
         supabase
           .from("accounts")
           .select("id, name, role, company, location, linkedin_handle, languages")
@@ -74,12 +75,18 @@ function ProfilePage() {
         navigate({ to: "/app", replace: true });
         return;
       }
+      const organizer = ev.organizer_account_id === userData.user.id;
       if (!mem) {
+        if (organizer) {
+          navigate({ to: "/event/$eventId/share", params: { eventId }, replace: true });
+          return;
+        }
         toast.error("You're not a member of this event yet.");
         navigate({ to: "/app", replace: true });
         return;
       }
       setEventName(ev.name);
+      setIsOrganizer(organizer);
       const accWithLangs = {
         ...(acc as Account),
         languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
@@ -178,7 +185,11 @@ function ProfilePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-4">
-          <Link to="/event/$eventId" params={{ eventId }} className="text-sm text-muted-foreground hover:underline">
+          <Link
+            to={isOrganizer ? "/event/$eventId/share" : "/event/$eventId"}
+            params={{ eventId }}
+            className="text-sm text-muted-foreground hover:underline"
+          >
             ← {eventName || "Back"}
           </Link>
           <TabaLogo height={44} />
