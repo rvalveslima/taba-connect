@@ -190,6 +190,8 @@ function OrganizerHome() {
             ))}
           </ul>
         )}
+
+        <FeedbackCard />
       </main>
     </div>
   );
