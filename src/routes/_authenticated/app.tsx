@@ -1,11 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ATTENDEE_ACCOUNT_ID } from "@/lib/demo-mode";
 import { friendlyError } from "@/lib/supabase-errors";
 import { RouteErrorFallback } from "@/components/route-fallbacks";
+import { deleteMyAccount } from "@/lib/account.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -38,6 +50,23 @@ function AppHome() {
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
   const [codeBusy, setCodeBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const callDeleteAccount = useServerFn(deleteMyAccount);
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      await callDeleteAccount();
+      await supabase.auth.signOut();
+      toast.success("Your account has been deleted.");
+      navigate({ to: "/", replace: true });
+    } catch (err) {
+      toast.error(friendlyError(err, "We couldn't delete your account. Try again."));
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     (async () => {
@@ -122,6 +151,12 @@ function AppHome() {
             <span className="text-muted-foreground">{email}</span>
             <button onClick={handleSignOut} className="rounded-md border border-border bg-background px-3 py-1.5 hover:bg-accent">
               Sign out
+            </button>
+            <button
+              onClick={() => { setDeleteConfirm(""); setDeleteOpen(true); }}
+              className="text-xs text-muted-foreground underline-offset-2 hover:text-destructive hover:underline"
+            >
+              Delete account
             </button>
           </div>
         </div>
@@ -216,6 +251,40 @@ function AppHome() {
           </>
         )}
       </main>
+
+      <AlertDialog open={deleteOpen} onOpenChange={(o) => { if (!deleting) setDeleteOpen(o); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes your profile, all event memberships, and your messages. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="delete-confirm">
+              Type <span className="font-mono font-semibold text-foreground">DELETE</span> to confirm
+            </label>
+            <input
+              id="delete-confirm"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              autoComplete="off"
+              disabled={deleting}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deleting || deleteConfirm !== "DELETE"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
