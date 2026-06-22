@@ -169,3 +169,106 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* --- Homepage motion -------------------------------------------------- */
+
+/* Reveal-on-scroll base: hidden until the .reveal-in class is added by the
+   Reveal wrapper. If JS doesn't run, prefers-reduced-motion forces visibility
+   (see below). */
+.reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.reveal-fade-up    { transform: translateY(24px); }
+.reveal-fade       { transform: none; }
+.reveal-scale-in   { transform: scale(0.9); }
+.reveal-slide-left { transform: translateX(40px); }
+.reveal-slide-right{ transform: translateX(-40px); }
+
+.reveal-in.reveal-fade-up     { animation: reveal-fade-up    0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+.reveal-in.reveal-fade        { animation: reveal-fade       0.7s ease-out forwards; }
+.reveal-in.reveal-scale-in    { animation: reveal-scale-in   0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+.reveal-in.reveal-slide-left  { animation: reveal-slide-left 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+.reveal-in.reveal-slide-right { animation: reveal-slide-right 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+
+@keyframes reveal-fade-up    { to { opacity: 1; transform: translateY(0); } }
+@keyframes reveal-fade       { to { opacity: 1; } }
+@keyframes reveal-scale-in   { to { opacity: 1; transform: scale(1); } }
+@keyframes reveal-slide-left { to { opacity: 1; transform: translateX(0); } }
+@keyframes reveal-slide-right{ to { opacity: 1; transform: translateX(0); } }
+
+/* Continuous ambient motion for the decorative geometric shapes. */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes drift-slow {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(12px, -14px); }
+}
+@keyframes spin-very-slow {
+  to { transform: rotate(360deg); }
+}
+.anim-float { animation: float-slow 6s ease-in-out infinite; }
+.anim-drift { animation: drift-slow 9s ease-in-out infinite; }
+.anim-spin  { animation: spin-very-slow 60s linear infinite; transform-origin: center; }
+
+/* Logo intro: triad dots → connecting lines → ambient dots. */
+@keyframes taba-dot-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes taba-line-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes taba-ambient-in {
+  to { opacity: 0.28; }
+}
+@keyframes taba-breath {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+
+.taba-anim .taba-triad-dot {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: taba-dot-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) forwards;
+}
+.taba-anim .taba-triad-dot.d1 { animation-delay: 0.15s; }
+.taba-anim .taba-triad-dot.d2 { animation-delay: 0.35s; }
+.taba-anim .taba-triad-dot.d3 { animation-delay: 0.55s; }
+
+.taba-anim .taba-line {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: taba-line-draw 0.55s ease-out forwards;
+}
+.taba-anim .taba-line.l1 { animation-delay: 0.75s; }
+.taba-anim .taba-line.l2 { animation-delay: 0.95s; }
+.taba-anim .taba-line.l3 { animation-delay: 1.15s; }
+
+.taba-anim .taba-ambient {
+  opacity: 0;
+  animation: taba-ambient-in 0.7s ease-out forwards;
+  animation-delay: 1.35s;
+}
+
+.taba-anim .taba-triad-dot.d3 {
+  /* After intro, give the bottom dot a soft breathing pulse. */
+  animation:
+    taba-dot-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) 0.55s forwards,
+    taba-breath 3.4s ease-in-out 2s infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .anim-float, .anim-drift, .anim-spin { animation: none !important; }
+  .taba-anim .taba-triad-dot,
+  .taba-anim .taba-line,
+  .taba-anim .taba-ambient { animation: none !important; opacity: 1 !important; stroke-dashoffset: 0 !important; transform: none !important; }
+  .taba-anim .taba-ambient { opacity: 0.28 !important; }
+}
+
