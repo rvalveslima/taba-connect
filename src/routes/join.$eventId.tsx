@@ -208,7 +208,7 @@ function JoinPage() {
       : event.date_start ?? "";
 
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
+    <div className="min-h-dvh bg-background px-4 py-10">
       <div className="mx-auto w-full max-w-md">
         <div className="mb-6 flex justify-center">
           <TabaLogo height={44} />

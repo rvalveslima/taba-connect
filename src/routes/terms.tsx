@@ -16,7 +16,7 @@ export const Route = createFileRoute("/terms")({
 
 function TermsPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-dvh bg-background text-foreground">
       <article className="mx-auto max-w-3xl px-6 py-16 lg:py-24">
         <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
           Terms & Code of Conduct
