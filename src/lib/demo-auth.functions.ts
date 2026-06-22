@@ -30,6 +30,39 @@ export const createDemoSession = createServerFn({ method: "POST" })
       // ignore — magic link below is the actual sign-in path
     }
 
+    // For the attendee demo, wipe profile + membership answers so every
+    // demo run starts on the empty profile form.
+    if (data.role === "attendee") {
+      const DEMO_ATTENDEE_ACCOUNT_ID = "deadbeef-0000-4000-8000-000000000002";
+      const DEMO_EVENT_ID = "ea4535bb-930c-47ee-8b59-d54d11a281e6";
+      try {
+        await supabaseAdmin
+          .from("accounts")
+          .update({
+            name: "",
+            role: null,
+            company: null,
+            location: null,
+            industry: null,
+            linkedin_handle: null,
+            languages: null,
+          })
+          .eq("id", DEMO_ATTENDEE_ACCOUNT_ID);
+        await supabaseAdmin
+          .from("event_memberships")
+          .update({
+            goal_tags: [],
+            looking_for: "",
+            give_back: "",
+            open_to_connect: true,
+          })
+          .eq("account_id", DEMO_ATTENDEE_ACCOUNT_ID)
+          .eq("event_id", DEMO_EVENT_ID);
+      } catch {
+        // non-fatal — sign-in still proceeds
+      }
+    }
+
     const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
