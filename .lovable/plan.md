@@ -1,29 +1,31 @@
 ## Problem
 
-On the profile page, the header has a back link "← {eventName}" that points to `/event/$eventId` (the attendee dashboard). When an **organizer** clicks it:
-
-- The dashboard loader checks for an `event_memberships` row for the current user.
-- Organizers don't have a membership row, so the loader redirects to `/join/$eventId`, which (since they're signed in but the event is theirs) bounces again. The net effect is "nothing happens" / a redirect to `/auth`.
-
-Attendees with no goal_tags hit a second redirect back to `/profile`, also looking like "nothing happens".
+The screenshot is `/auth`, not `/join/:eventId`. The last change only updated the invite page. Attendees can still reach `/auth` (marketing "Sign in" links, refresh on a protected route, old links) and see email/password there.
 
 ## Fix
 
-Make the profile page's back link role-aware:
+Make `/auth` show **Google + magic link** by default (attendee mode), and keep **Google + email/password** only when `?as=organizer` (the URL the marketing "Get started" buttons use).
 
-1. In `src/routes/_authenticated/event.$eventId.profile.tsx`, when loading the event, also fetch `organizer_account_id` and compute `isOrganizer = ev.organizer_account_id === userData.user.id`.
-2. Replace the single `<Link to="/event/$eventId">` in the header with a conditional:
-   - **Organizer** → `<Link to="/event/$eventId/share" params={{ eventId }}>← {eventName}</Link>` (the organizer's event page).
-   - **Attendee** → keep `<Link to="/event/$eventId" params={{ eventId }}>← {eventName}</Link>`.
-3. Also stop forcing organizers through the "must have membership" guard:
-   - Currently the profile loader redirects to `/app` if there's no `event_memberships` row. For organizers, that's wrong (they shouldn't be on this page at all). If `isOrganizer && !mem`, redirect to `/event/$eventId/share` instead of showing a "not a member" error.
+### Edits in `src/routes/auth.tsx`
+
+1. **Attendee branch (default, `isOrganizer === false`)** — replace the entire email/password form, "Forgot password" link, sign-in/sign-up toggle, and demo password effects with the magic-link UI:
+   - Keep the existing "Continue with Google" button (uses `lovable.auth.signInWithOAuth`, redirects to `/app`).
+   - Add an `or` divider, then an email field + "Email me a magic link" button calling `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + "/app" } })`.
+   - After submit, show a "Check your inbox — link sent to {email}" panel with a "Use a different email" reset link (same pattern as `join.$eventId.tsx`).
+   - Hide the "New to Taba? Create an account" toggle and the "Forgot password?" link for attendees.
+
+2. **Organizer branch (`?as=organizer`)** — leave the current UI as-is: Google button, email/password form, demo-password hint, forgot-password flow. Redirect target stays `/organizer`.
+
+3. **Cleanup** — keep `currentEmail` "Signed in as…" banner for both branches. Remove the sign-up `mode` toggle entirely for attendees (organizer demo flow already handles sign-up implicitly via `handleEmail`).
+
+4. **Copy update** — attendee header stays "Sign in" / "Welcome back to your village." Button label "Email me a magic link" matches `/join`.
 
 ## Out of scope
 
-- No DB or RLS changes.
-- No changes to the attendee dashboard's own redirect logic.
-- No styling changes beyond the link target.
+- No changes to `/join/:eventId` (already magic-link).
+- No changes to `/reset-password`, `/organizer`, or the marketing page.
+- No DB, RLS, or email-template changes. Uses the default Supabase magic-link email.
 
 ## Files
 
-- `src/routes/_authenticated/event.$eventId.profile.tsx` — add `isOrganizer` state, fetch `organizer_account_id`, branch the back link, branch the no-membership redirect.
+- `src/routes/auth.tsx` — branch attendee vs organizer; add magic-link handler and "check your inbox" state for attendees.
