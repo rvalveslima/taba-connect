@@ -214,6 +214,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_event_by_code: { Args: { _code: string }; Returns: string }
+      get_event_code: { Args: { _event_id: string }; Returns: string }
       is_event_member: { Args: { _event_id: string }; Returns: boolean }
       is_my_membership: { Args: { _membership_id: string }; Returns: boolean }
       shares_event_with: { Args: { _other: string }; Returns: boolean }
