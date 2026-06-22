@@ -360,23 +360,31 @@ function WhoItsFor() {
     <section className="relative border-b-2 border-foreground bg-background">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-24 lg:grid-cols-12 lg:px-10 lg:py-28">
         <div className="lg:col-span-4">
-          <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
-            04 — Positioning
-          </p>
-          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-            Built for the event itself.
-          </h2>
+          <Reveal variant="fade-up">
+            <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
+              04 — Positioning
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={120}>
+            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+              Built for the event itself.
+            </h2>
+          </Reveal>
         </div>
         <div className="lg:col-span-8 lg:pt-2">
-          <p className="text-xl leading-relaxed text-foreground/85">
-            Taba is for a single event, where attendees decide who they want to
-            meet — and how deep that goes. It isn't an algorithm matching you to
-            strangers at scale, and it isn't another community platform asking
-            for ongoing engagement.
-          </p>
-          <p className="mt-4 text-xl leading-relaxed text-foreground/85">
-            One event. Real depth. Then out of your way.
-          </p>
+          <Reveal variant="fade-up">
+            <p className="text-xl leading-relaxed text-foreground/85">
+              Taba is for a single event, where attendees decide who they want to
+              meet — and how deep that goes. It isn't an algorithm matching you to
+              strangers at scale, and it isn't another community platform asking
+              for ongoing engagement.
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={120}>
+            <p className="mt-4 text-xl leading-relaxed text-foreground/85">
+              One event. Real depth. Then out of your way.
+            </p>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -416,8 +424,8 @@ function PricingTeaser() {
 
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-background">
-      <ClayCircle className="pointer-events-none absolute -left-20 -bottom-20 hidden h-60 w-60 opacity-90 sm:block" />
-      <InkSquare className="pointer-events-none absolute right-[12%] top-12 hidden h-6 w-6 sm:block" />
+      <ClayCircle className="anim-drift pointer-events-none absolute -left-20 -bottom-20 hidden h-60 w-60 opacity-90 sm:block" />
+      <InkSquare className="anim-spin pointer-events-none absolute right-[12%] top-12 hidden h-6 w-6 sm:block" />
 
       <div className="relative mx-auto max-w-5xl px-6 py-24 lg:px-10 lg:py-28">
         <div className="border-2 border-foreground bg-background p-10 lg:p-14">
