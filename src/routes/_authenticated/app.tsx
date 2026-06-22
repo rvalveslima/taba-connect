@@ -38,7 +38,9 @@ function AppHome() {
       try {
         const { data: userData } = await supabase.auth.getUser();
         setEmail(userData.user?.email ?? null);
+        setUserId(userData.user?.id ?? null);
         if (!userData.user) return;
+
 
         const { data } = await supabase
           .from("event_memberships")
