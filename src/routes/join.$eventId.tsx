@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { TabaLogo } from "@/components/taba-logo";
 import {
   DEMO_MODE_ENABLED,
   DEMO_EVENT_ID,
   DEMO_ATTENDEE_ACCOUNT_ID,
   signInAsDemoAttendee,
 } from "@/lib/demo-mode";
+
 
 type EventRow = {
   id: string;
