@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { TabaLogo } from "@/components/taba-logo";
+import { DEMO_MODE_ENABLED, signInAsDemoOrganizer } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -276,12 +277,36 @@ function AuthPage() {
           </div>
         )}
 
-        {isOrganizer && (
-          <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
-            Demo access — use any email with password{" "}
-            <span className="font-mono font-semibold">Tabaevent123</span>.
+        {isOrganizer && DEMO_MODE_ENABLED && (
+          <div className="mb-4">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={async () => {
+                setError(null);
+                setLoading(true);
+                const ok = await signInAsDemoOrganizer();
+                if (ok) {
+                  navigate({ to: "/organizer", replace: true });
+                } else {
+                  setLoading(false);
+                }
+              }}
+              className="w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+            >
+              I'm here for the demo →
+            </button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              One-click access to the pre-built Shebuilds event.
+            </p>
+            <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              or sign in
+              <div className="h-px flex-1 bg-border" />
+            </div>
           </div>
         )}
+
 
         {info && (
           <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground" role="status">
