@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TabaLogo } from "@/components/taba-logo";
+import { DEMO_ORGANIZER_EMAIL } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/_authenticated/organizer")({
   head: () => ({ meta: [{ title: "Your events — Taba" }] }),
@@ -85,6 +86,16 @@ function OrganizerHome() {
       </header>
 
       <main className="mx-auto max-w-3xl space-y-8 px-6 py-10">
+        {email === DEMO_ORGANIZER_EMAIL && (
+          <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-4 text-sm">
+            <p className="font-semibold text-foreground">👋 You're in the demo.</p>
+            <p className="mt-1 text-muted-foreground">
+              Open <span className="font-medium text-foreground">Shebuilds</span> below, then click{" "}
+              <span className="font-medium text-foreground">Share</span> to grab the attendee join link and try the attendee experience on your phone.
+            </p>
+          </div>
+        )}
+
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-heading text-3xl font-semibold tracking-tight">Your events</h1>
