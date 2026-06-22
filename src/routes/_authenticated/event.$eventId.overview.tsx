@@ -164,21 +164,8 @@ function EventOverviewPage() {
               >
                 Share event
               </Link>
-              <Link
-                to="/event/$eventId"
-                params={{ eventId }}
-                className="rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent"
-              >
-                View attendees
-              </Link>
-              <Link
-                to="/event/$eventId/profile"
-                params={{ eventId }}
-                className="rounded-full border border-border bg-background px-5 py-2.5 text-sm font-semibold hover:bg-accent"
-              >
-                Edit your profile
-              </Link>
             </section>
+
           </>
         )}
       </main>
