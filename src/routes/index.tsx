@@ -16,6 +16,7 @@ import {
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DEMO_MODE_ENABLED, signInAsDemoOrganizer } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,16 +43,20 @@ function MarketingPage() {
   const navigate = useNavigate();
   const goOrganizer = () =>
     navigate({ to: "/auth", search: { as: "organizer" } as never });
+  const goDemo = async () => {
+    const ok = await signInAsDemoOrganizer();
+    if (ok) navigate({ to: "/organizer", replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Hero onJoin={goOrganizer} />
+      <Hero onJoin={goOrganizer} onDemo={goDemo} />
       <Problem />
       <VillageStory />
       <HowItWorks />
       <WhoItsFor />
       <PricingTeaser />
-      <FinalCTA onJoin={goOrganizer} />
+      <FinalCTA onJoin={goOrganizer} onDemo={goDemo} />
       <Footer />
     </div>
   );
@@ -78,7 +83,7 @@ function Nav({ onJoin }: { onJoin: () => void }) {
 
 /* ---------------- HERO ---------------- */
 
-function Hero({ onJoin }: { onJoin: () => void }) {
+function Hero({ onJoin, onDemo }: { onJoin: () => void; onDemo: () => void }) {
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground">
       {/* Geometric backdrop */}
@@ -124,6 +129,16 @@ function Hero({ onJoin }: { onJoin: () => void }) {
               >
                 Join as organizer →
               </Button>
+              {DEMO_MODE_ENABLED && (
+                <Button
+                  onClick={onDemo}
+                  size="lg"
+                  variant="outline"
+                  className="rounded-none border-2 border-foreground bg-background px-7 py-6 font-display text-base uppercase tracking-wider text-foreground hover:bg-foreground hover:text-background"
+                >
+                  I'm here for the demo →
+                </Button>
+              )}
             </div>
           </Reveal>
         </div>
@@ -496,7 +511,7 @@ function FinalCTA({ onJoin }: { onJoin: () => void }) {
           </h2>
         </Reveal>
         <Reveal variant="scale-in" delay={280}>
-          <div className="mt-12 flex justify-center">
+          <div className="mt-12 flex flex-wrap justify-center gap-4">
             <Button
               onClick={onJoin}
               size="lg"
@@ -505,6 +520,15 @@ function FinalCTA({ onJoin }: { onJoin: () => void }) {
             >
               Join as organizer →
             </Button>
+            {DEMO_MODE_ENABLED && (
+              <Button
+                onClick={onDemo}
+                size="lg"
+                className="rounded-none border-2 border-background bg-transparent px-8 py-6 font-display text-base uppercase tracking-wider text-background hover:bg-background hover:text-foreground"
+              >
+                I'm here for the demo →
+              </Button>
+            )}
           </div>
         </Reveal>
       </div>
