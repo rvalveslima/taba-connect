@@ -152,6 +152,12 @@ function AppHome() {
             <button onClick={handleSignOut} className="rounded-md border border-border bg-background px-3 py-1.5 hover:bg-accent">
               Sign out
             </button>
+            <button
+              onClick={() => { setDeleteConfirm(""); setDeleteOpen(true); }}
+              className="text-xs text-muted-foreground underline-offset-2 hover:text-destructive hover:underline"
+            >
+              Delete account
+            </button>
           </div>
         </div>
       </header>
