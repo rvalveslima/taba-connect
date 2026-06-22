@@ -104,8 +104,9 @@ function DashboardPage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      const [{ data: ev }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
-        supabase.from("events").select("name, event_code, organizer_account_id").eq("id", eventId).maybeSingle(),
+      const [{ data: ev }, { data: codeData }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
+        supabase.from("events").select("name, organizer_account_id").eq("id", eventId).maybeSingle(),
+        supabase.rpc("get_event_code", { _event_id: eventId }),
         supabase.from("accounts").select("name").eq("id", userData.user.id).maybeSingle(),
         supabase
           .from("event_memberships")
@@ -130,8 +131,9 @@ function DashboardPage() {
         return;
       }
       setEventName(ev.name);
-      setEventCode(ev.event_code ?? null);
+      setEventCode((codeData as string | null) ?? null);
       setIsOrganizer(ev.organizer_account_id === userData.user.id);
+
       setMyName(myAcc?.name ?? "");
       setMyTags(mine);
 

@@ -76,23 +76,20 @@ function AppHome() {
     if (!trimmed) return;
     setCodeBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("events")
-        .select("id")
-        .eq("event_code", trimmed)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("find_event_by_code", { _code: trimmed });
       if (error) throw error;
       if (!data) {
         toast.error(`No event found for code "${trimmed}".`);
         return;
       }
-      navigate({ to: "/join/$eventId", params: { eventId: data.id } });
+      navigate({ to: "/join/$eventId", params: { eventId: data as string } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not look up event.");
     } finally {
       setCodeBusy(false);
     }
   }
+
 
   const now = Date.now();
   const current = rows.find((r) => now - new Date(r.joined_at).getTime() < ACTIVE_WINDOW_MS);

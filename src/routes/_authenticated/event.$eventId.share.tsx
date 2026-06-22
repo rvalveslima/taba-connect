@@ -31,15 +31,19 @@ function ShareEventPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("events")
-        .select("id, name, date_start, date_end, event_code, image_url")
-        .eq("id", eventId)
-        .maybeSingle();
-      setEvent((data as EventRow) ?? null);
+      const [{ data }, { data: codeData }] = await Promise.all([
+        supabase
+          .from("events")
+          .select("id, name, date_start, date_end, image_url")
+          .eq("id", eventId)
+          .maybeSingle(),
+        supabase.rpc("get_event_code", { _event_id: eventId }),
+      ]);
+      setEvent(data ? ({ ...(data as Omit<EventRow, "event_code">), event_code: (codeData as string | null) ?? null }) : null);
       setLoading(false);
     })();
   }, [eventId]);
+
 
   function formatDates(e: EventRow) {
     if (e.date_start && e.date_end) return `${e.date_start} – ${e.date_end}`;
