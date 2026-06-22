@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
+import { DEMO_ATTENDEE_ACCOUNT_ID } from "@/lib/demo-mode";
 
-const DEMO_EVENT_ID = "2bb9c0d4-1f73-4a89-9232-9eb65c2b99bf";
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Your events — Taba" }] }),
@@ -25,7 +26,9 @@ type EventRow = {
 function AppHome() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [rows, setRows] = useState<EventRow[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
   const [codeBusy, setCodeBusy] = useState(false);
@@ -35,7 +38,9 @@ function AppHome() {
       try {
         const { data: userData } = await supabase.auth.getUser();
         setEmail(userData.user?.email ?? null);
+        setUserId(userData.user?.id ?? null);
         if (!userData.user) return;
+
 
         const { data } = await supabase
           .from("event_memberships")
@@ -173,41 +178,37 @@ function AppHome() {
               )}
             </section>
 
-            <section className="rounded-lg border border-dashed border-border bg-card/50 p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Join or host</p>
-                <Link
-                  to="/event/new"
-                  className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
-                >
-                  + Create event
-                </Link>
-              </div>
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <form onSubmit={handleJoinByCode} className="flex flex-1 gap-2">
-                  <input
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="Enter event code"
-                    className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
-                  />
-                  <button
-                    type="submit"
-                    disabled={codeBusy || !code.trim()}
-                    className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            {userId !== DEMO_ATTENDEE_ACCOUNT_ID && (
+              <section className="rounded-lg border border-dashed border-border bg-card/50 p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Join or host</p>
+                  <Link
+                    to="/event/new"
+                    className="rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
                   >
-                    Join
-                  </button>
-                </form>
-                <Link
-                  to="/join/$eventId"
-                  params={{ eventId: DEMO_EVENT_ID }}
-                  className="text-xs text-muted-foreground underline hover:text-foreground"
-                >
-                  Try the demo event
-                </Link>
-              </div>
-            </section>
+                    + Create event
+                  </Link>
+                </div>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <form onSubmit={handleJoinByCode} className="flex flex-1 gap-2">
+                    <input
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      placeholder="Enter event code"
+                      className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                    <button
+                      type="submit"
+                      disabled={codeBusy || !code.trim()}
+                      className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                    >
+                      Join
+                    </button>
+                  </form>
+                </div>
+              </section>
+            )}
+
           </>
         )}
       </main>
