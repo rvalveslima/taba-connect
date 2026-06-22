@@ -294,6 +294,22 @@ function JoinPage() {
                 Google is the fastest way in.
               </p>
 
+              {showDemoButton && (
+                <div className="mb-5 rounded-md border border-primary/30 bg-primary/5 p-3">
+                  <button
+                    type="button"
+                    onClick={handleDemoAttendee}
+                    disabled={busy}
+                    className="w-full rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {busy ? "Starting demo…" : "I'm here for the demo →"}
+                  </button>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    One-click demo attendee — you'll fill a quick profile next.
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={handleGoogle}
                 disabled={busy}
