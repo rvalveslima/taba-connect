@@ -31,6 +31,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   // Prefill the demo password on the client only (avoids SSR/CSR hydration mismatch).
   useEffect(() => {
@@ -123,6 +124,28 @@ function AuthPage() {
       navigate({ to: postAuthTarget, replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setInfo(null);
+    setLoading(true);
+    try {
+      const { error: otpErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}${postAuthTarget}`,
+          data: name ? { name } : undefined,
+        },
+      });
+      if (otpErr) throw otpErr;
+      setMagicLinkSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send magic link.");
     } finally {
       setLoading(false);
     }
@@ -261,108 +284,144 @@ function AuthPage() {
           </div>
         )}
 
-
-        <button
-          onClick={handleGoogle}
-          disabled={loading}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
-        >
-          Continue with Google
-        </button>
-
-        <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
-          <div className="h-px flex-1 bg-border" />
-          or
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <form onSubmit={handleEmail} className="space-y-3">
-          {mode === "sign-up" && (
-            <div>
-              <label className="mb-1 block text-xs font-medium" htmlFor="name">
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                autoComplete="name"
-              />
-            </div>
-          )}
-          <div>
-            <label className="mb-1 block text-xs font-medium" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              autoComplete="email"
-            />
-          </div>
-          <div>
-            <div className="mb-1 flex items-baseline justify-between">
-              <label className="block text-xs font-medium" htmlFor="password">Password</label>
-              {mode === "sign-in" && !isOrganizer && (
-                <button
-                  type="button"
-                  onClick={() => { setForgotMode(true); setError(null); setInfo(null); }}
-                  className="text-xs text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  Forgot password?
-                </button>
-              )}
-            </div>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
+        {!isOrganizer && magicLinkSent ? (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Check your inbox</h2>
+            <p className="text-sm text-muted-foreground">
+              We sent a magic link to <span className="font-medium text-foreground">{email}</span>.
+              Open it on this device to finish signing in.
             </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {loading ? "…" : isOrganizer ? "Continue →" : mode === "sign-in" ? "Sign in" : "Create account"}
-          </button>
-        </form>
-
-        {!isOrganizer && (
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            {mode === "sign-in" ? "New to Taba?" : "Already have an account?"}{" "}
             <button
               type="button"
-              onClick={() => {
-                setError(null);
-                setInfo(null);
-                setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-              }}
-              className="font-medium text-foreground hover:underline"
+              onClick={() => { setMagicLinkSent(false); setError(null); }}
+              className="text-xs text-muted-foreground underline-offset-2 hover:underline"
             >
-              {mode === "sign-in" ? "Create an account" : "Sign in"}
+              Use a different email
             </button>
-          </p>
-        )}
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={handleGoogle}
+              disabled={loading}
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            >
+              Continue with Google
+            </button>
 
+            <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              or
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            {isOrganizer ? (
+              <>
+                <form onSubmit={handleEmail} className="space-y-3">
+                  {mode === "sign-up" && (
+                    <div>
+                      <label className="mb-1 block text-xs font-medium" htmlFor="name">
+                        Name
+                      </label>
+                      <input
+                        id="name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        autoComplete="name"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium" htmlFor="email">
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      autoComplete="email"
+                    />
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-baseline justify-between">
+                      <label className="block text-xs font-medium" htmlFor="password">Password</label>
+                      {mode === "sign-in" && (
+                        <button
+                          type="button"
+                          onClick={() => { setForgotMode(true); setError(null); setInfo(null); }}
+                          className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      id="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+                    />
+                  </div>
+
+                  {error && (
+                    <p className="text-sm text-destructive" role="alert">
+                      {error}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {loading ? "…" : "Continue →"}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <form onSubmit={handleMagicLink} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium" htmlFor="magic-email">
+                    Email
+                  </label>
+                  <input
+                    id="magic-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    autoComplete="email"
+                  />
+                </div>
+                {error && (
+                  <p className="text-sm text-destructive" role="alert">
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading || !email}
+                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {loading ? "Sending…" : "Email me a magic link"}
+                </button>
+                <p className="text-center text-xs text-muted-foreground">
+                  We'll email you a one-tap link to sign in. No password needed.
+                </p>
+              </form>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
