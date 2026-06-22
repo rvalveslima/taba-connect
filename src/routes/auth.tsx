@@ -426,12 +426,12 @@ function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading || !email}
-                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
                 >
-                  {loading ? "Sending…" : "Email me a magic link"}
+                  {loading ? "Sending…" : "Email me a magic link instead"}
                 </button>
                 <p className="text-center text-xs text-muted-foreground">
-                  We'll email you a one-tap link to sign in. No password needed.
+                  We'll email you a one-tap link. Delivery can be slow — check Spam/Promotions.
                 </p>
               </form>
             )}
