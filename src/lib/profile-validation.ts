@@ -2,6 +2,8 @@ import { z } from "zod";
 
 
 const trim = (s: unknown) => (typeof s === "string" ? s.trim() : s);
+const trimRequired = (s: unknown) => (typeof s === "string" ? s.trim() : "");
+const REQUIRED_MSG = "Please complete all required fields (only LinkedIn is optional).";
 
 
 
