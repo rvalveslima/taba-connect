@@ -5,9 +5,13 @@ import { INTEREST_TAGS } from "@/lib/interest-tags";
 import { profileSchema, normalizeLinkedin } from "@/lib/profile-validation";
 import { toast } from "sonner";
 import { TabaLogo } from "@/components/taba-logo";
+import { DEMO_ATTENDEE_ACCOUNT_ID, DEMO_EVENT_ID } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/profile")({
   head: () => ({ meta: [{ title: "Your profile — Taba" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    demoSetup: search.demoSetup === true || search.demoSetup === "true" ? true : undefined,
+  }),
   component: ProfilePage,
 });
 
@@ -36,6 +40,7 @@ type Membership = {
 
 function ProfilePage() {
   const { eventId } = Route.useParams();
+  const { demoSetup } = Route.useSearch();
   const navigate = useNavigate();
   const [eventName, setEventName] = useState("");
   const [isOrganizer, setIsOrganizer] = useState(false);
@@ -87,18 +92,29 @@ function ProfilePage() {
       }
       setEventName(ev.name);
       setIsOrganizer(organizer);
-      const accWithLangs = {
-        ...(acc as Account),
-        languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
-      };
+      const isDemoSetup = demoSetup && eventId === DEMO_EVENT_ID && userData.user.id === DEMO_ATTENDEE_ACCOUNT_ID;
+      const accWithLangs = isDemoSetup
+        ? {
+            ...(acc as Account),
+            name: "Demo Attendee",
+            role: null,
+            company: null,
+            location: null,
+            linkedin_handle: null,
+            languages: ["English"],
+          }
+        : {
+            ...(acc as Account),
+            languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
+          };
       setAccount(accWithLangs);
       setMembership(mem as Membership);
-      setTags(mem.goal_tags ?? []);
-      setLookingFor(mem.looking_for ?? "");
-      setGiveBack(mem.give_back ?? "");
-      setOpenToConnect(mem.open_to_connect ?? true);
+      setTags(isDemoSetup ? [] : mem.goal_tags ?? []);
+      setLookingFor(isDemoSetup ? "" : mem.looking_for ?? "");
+      setGiveBack(isDemoSetup ? "" : mem.give_back ?? "");
+      setOpenToConnect(isDemoSetup ? true : mem.open_to_connect ?? true);
     })();
-  }, [eventId, navigate]);
+  }, [demoSetup, eventId, navigate]);
 
   function toggleTag(t: string) {
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
