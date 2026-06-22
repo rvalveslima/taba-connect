@@ -317,29 +317,35 @@ function HowItWorks() {
       <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10 lg:py-32">
         <div className="mb-16 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
-              03 — How it works
-            </p>
-            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Three steps. From an attendee's point of view.
-            </h2>
+            <Reveal variant="fade-up">
+              <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
+                03 — How it works
+              </p>
+            </Reveal>
+            <Reveal variant="fade-up" delay={120}>
+              <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+                Three steps. From an attendee's point of view.
+              </h2>
+            </Reveal>
           </div>
         </div>
 
         <div className="grid gap-px border-2 border-foreground bg-foreground sm:grid-cols-3">
-          {steps.map((s) => (
-            <div key={s.n} className="flex flex-col gap-6 bg-background p-8">
-              <div className="flex items-start justify-between">
-                <span className="font-display text-3xl font-bold text-primary">
-                  {s.n}
-                </span>
-                {s.shape}
+          {steps.map((s, i) => (
+            <Reveal key={s.n} variant="fade-up" delay={i * 140}>
+              <div className="flex h-full flex-col gap-6 bg-background p-8">
+                <div className="flex items-start justify-between">
+                  <span className="font-display text-3xl font-bold text-primary">
+                    {s.n}
+                  </span>
+                  <span className="anim-float" style={{ animationDelay: `${i * 600}ms` }}>{s.shape}</span>
+                </div>
+                <h3 className="font-display text-2xl font-bold leading-tight">
+                  {s.title}
+                </h3>
+                <p className="text-foreground/80">{s.body}</p>
               </div>
-              <h3 className="font-display text-2xl font-bold leading-tight">
-                {s.title}
-              </h3>
-              <p className="text-foreground/80">{s.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
