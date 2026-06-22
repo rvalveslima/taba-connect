@@ -253,6 +253,11 @@ function AuthPage() {
                 ? "Welcome back to your village."
                 : "Start building your village."}
           </p>
+          {!isOrganizer && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Google is the fastest way in.
+            </p>
+          )}
         </div>
 
         {currentEmail && (
@@ -291,6 +296,12 @@ function AuthPage() {
               We sent a magic link to <span className="font-medium text-foreground">{email}</span>.
               Open it on this device to finish signing in.
             </p>
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Can't find it? Check your <span className="font-medium text-foreground">Spam</span> or{" "}
+              <span className="font-medium text-foreground">Promotions</span> folder — the email comes from a generic
+              no-reply address. For the most reliable sign-in, use{" "}
+              <span className="font-medium text-foreground">Continue with Google</span>.
+            </div>
             <button
               type="button"
               onClick={() => { setMagicLinkSent(false); setError(null); }}
@@ -304,7 +315,11 @@ function AuthPage() {
             <button
               onClick={handleGoogle}
               disabled={loading}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+              className={
+                isOrganizer
+                  ? "mb-4 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                  : "mb-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+              }
             >
               Continue with Google
             </button>
@@ -411,12 +426,12 @@ function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading || !email}
-                  className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
                 >
-                  {loading ? "Sending…" : "Email me a magic link"}
+                  {loading ? "Sending…" : "Email me a magic link instead"}
                 </button>
                 <p className="text-center text-xs text-muted-foreground">
-                  We'll email you a one-tap link to sign in. No password needed.
+                  We'll email you a one-tap link. Delivery can be slow — check Spam/Promotions.
                 </p>
               </form>
             )}
