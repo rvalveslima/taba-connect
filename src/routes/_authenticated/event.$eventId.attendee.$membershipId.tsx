@@ -214,7 +214,8 @@ function DecisionPage() {
       await navigator.clipboard.writeText(message);
       toast.success("Message copied — paste in LinkedIn");
     } catch {
-      toast.error("Could not copy");
+      toast.error("Couldn't copy automatically — long-press the message to copy it manually.");
+
     }
   }
 
@@ -345,7 +346,7 @@ function DecisionPage() {
                     await navigator.clipboard.writeText(message);
                     toast.success("Message copied");
                   } catch {
-                    toast.error("Could not copy");
+                    toast.error("Couldn't copy automatically — long-press the message to copy it manually.");
                   }
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground"
