@@ -1,43 +1,49 @@
-# Surface Terms & Code of Conduct in the attendee experience
+## Goal
+A judge clicks **"I'm here for the demo"** → lands directly in the Shebuilds organizer dashboard → grabs the attendee join link → runs the real attendee flow. Existing auth is untouched. Button is gated behind a single flag you can flip off after the demo.
 
-The `/terms` page already exists. The attendee journey has two natural commit points where consent should be visible. Recommendation: add a short, consistent "By joining, you agree to our Terms & Code of Conduct" line directly under the primary action button at each step. Linking (not a checkbox) keeps friction low while still putting the terms in front of every attendee before they commit.
+## Status
+- ✅ Demo organizer account `demo@taba.events` / `Tabaevent123` created in the database.
+- ✅ **Shebuilds** event reassigned to that account.
+- ⏭️ Code changes below pending your approval.
 
-## Where to add it
+## Code changes
 
-1. **`src/routes/join.$eventId.tsx`** — the main attendee entry point.
-   - Under the "Join the event" button (signed-in path, ~line 226).
-   - Under the submit button of the inline sign-up / join form (~line 307).
-   - Under the "Continue" button on the email-lookup step (~line 273).
-   - Single shared snippet so the wording stays identical.
-
-2. **`src/routes/auth.tsx`** — generic signup path (used when attendees create an account outside the join flow).
-   - Under the Sign-up submit button, same snippet.
-
-3. **Footer of `src/routes/index.tsx`** — already public, but add a small "Terms & Code of Conduct" link in the footer for discoverability after the fact. (Optional — confirm if you want this.)
-
-## What the snippet looks like
-
-```tsx
-<p className="mt-3 text-center text-xs text-muted-foreground">
-  By joining, you agree to our{" "}
-  <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
-    Terms & Code of Conduct
-  </Link>.
-</p>
+### 1. New file — `src/lib/demo-mode.ts`
+The kill switch + shared sign-in helper:
+```ts
+export const DEMO_MODE_ENABLED = true; // flip to false after the hackathon
 ```
+Also exports `signInAsDemoOrganizer()` — signs out any current user, signs in as the demo account, returns success/failure (toasts on error).
 
-Opens in the same tab (it's a first-party page). `<Link>` from `@tanstack/react-router` so it stays client-side.
+### 2. `src/routes/index.tsx` — homepage
+Add a secondary **"I'm here for the demo →"** button:
+- Next to "Join as organizer" in the hero
+- Next to "Join as organizer" in the final CTA section
 
-## Why this approach (vs alternatives)
+Both wrapped in `{DEMO_MODE_ENABLED && …}` so flipping the flag removes them everywhere. Clicking either runs `signInAsDemoOrganizer()` then `navigate("/organizer")`.
 
-- **Inline link under the CTA** (recommended): zero added clicks, legally meaningful because it sits at the moment of consent, matches how Eventbrite / Luma / Partiful handle it.
-- **Required checkbox**: stronger consent record, but adds friction to a flow we're trying to keep one-tap. Recommend only if you want an auditable opt-in.
-- **Modal on first join**: high friction, attendees dismiss without reading. Skip.
+### 3. `src/routes/auth.tsx` — organizer sign-in page
+Replace the current blue "Demo access — use any email with password Tabaevent123" info box with a real primary button:
+> **I'm here for the demo →**
+
+Gated by `DEMO_MODE_ENABLED`. Below it: divider, then the unchanged Continue with Google + email/password form for real organizers.
+
+### 4. `src/routes/_authenticated/organizer.tsx` — dashboard hint
+When the signed-in email is `demo@taba.events`, show a friendly banner above the events list:
+> 👋 You're in the demo. Open **Shebuilds** below, then click **Share** to get the attendee join link.
+
+No structural change; pure presentational hint so judges know the next click.
+
+## Demo script
+1. Homepage → **I'm here for the demo**
+2. Lands on `/organizer` as demo user → sees Shebuilds card with banner
+3. Click **Share** → copy attendee join link / scan QR
+4. Open the join link on a phone → real attendee flow (Google sign-in) → profile → matches
+
+## Turning the demo off later
+Just tell me "disable demo mode" and I'll flip `DEMO_MODE_ENABLED` to `false`. All three buttons disappear instantly, the demo account stays in the DB harmlessly.
 
 ## Out of scope
-
-No changes to `/terms` copy, no new route, no DB column to record acceptance (can add later if you want an audit trail — let me know).
-
-## Open question
-
-Do you want option A (inline link, recommended) or option B (required checkbox that blocks the button until ticked)? And should I add the footer link on the homepage too?
+- Attendee flow unchanged (still Google / magic link).
+- No RLS or schema changes.
+- No new public/anonymous routes.
