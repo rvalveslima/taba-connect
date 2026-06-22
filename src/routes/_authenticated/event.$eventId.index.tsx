@@ -195,7 +195,10 @@ function DashboardPage() {
   const visible = useMemo(() => {
     let v = attendees;
     if (roleFilter !== "all") v = v.filter((a) => (a.role ?? "").trim() === roleFilter);
-    if (languageFilter !== "all") v = v.filter((a) => a.languages.includes(languageFilter));
+    if (languageFilter !== "all") {
+      const aliases = (LANG_ALIASES[languageFilter] ?? [languageFilter]).map((s) => s.toLowerCase());
+      v = v.filter((a) => a.languages.some((l) => aliases.includes(l.toLowerCase())));
+    }
     if (companyFilter !== "all") v = v.filter((a) => (a.company ?? "").trim() === companyFilter);
     if (goalFilter !== "all") v = v.filter((a) => a.tags.includes(goalFilter));
     if (openOnly) v = v.filter((a) => a.open_to_connect);
