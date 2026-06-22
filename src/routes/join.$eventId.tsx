@@ -99,12 +99,10 @@ function JoinPage() {
         .insert({ event_id: eventId, account_id: accountId, goal_tags: [] });
       if (insertErr) throw insertErr;
     }
-    navigate({
-      to: "/event/$eventId/profile",
-      params: { eventId },
-      search: demoProfileSetup ? { demoSetup: true } : undefined,
-      replace: true,
-    });
+    if (demoProfileSetup) {
+      window.sessionStorage.setItem("taba-demo-attendee-profile-setup", eventId);
+    }
+    navigate({ to: "/event/$eventId/profile", params: { eventId }, replace: true });
   }
 
   async function handleGoogle() {
