@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { overlapTags } from "@/lib/interest-tags";
 import { OverlapCircles } from "@/components/overlap-circles";
 import { toast } from "sonner";
+import { isDemoFakeProfile } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/attendee/$membershipId")({
   head: () => ({ meta: [{ title: "Reach out — Taba" }] }),
