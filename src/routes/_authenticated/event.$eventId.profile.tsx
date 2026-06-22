@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { INTEREST_TAGS } from "@/lib/interest-tags";
 import { profileSchema, normalizeLinkedin } from "@/lib/profile-validation";
@@ -343,7 +343,7 @@ function ProfilePage() {
                   </button>
                 ) : (
                   <input
-                    autoFocus
+                    ref={tagInputRef}
                     value={tagDraft}
                     onChange={(e) => setTagDraft(e.target.value)}
                     onKeyDown={(e) => {
@@ -503,7 +503,7 @@ function LanguagesPicker({
           </button>
         ) : (
           <input
-            autoFocus
+            ref={langInputRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
