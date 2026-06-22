@@ -140,36 +140,46 @@ function Problem() {
     <section className="relative border-b-2 border-foreground bg-background">
       <div className="mx-auto grid max-w-7xl gap-16 px-6 py-24 lg:grid-cols-12 lg:px-10 lg:py-32">
         <div className="lg:col-span-5">
-          <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
-            01 — The problem
-          </p>
-          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-            You don't need more people to meet.
-            <br />
-            <span className="text-primary">
-              You need to know who's worth talking to.
-            </span>
-          </h2>
+          <Reveal variant="fade-up">
+            <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
+              01 — The problem
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={120}>
+            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+              You don't need more people to meet.
+              <br />
+              <span className="text-primary">
+                You need to know who's worth talking to.
+              </span>
+            </h2>
+          </Reveal>
         </div>
         <div className="space-y-8 lg:col-span-7 lg:pt-2">
-          <p className="text-xl leading-relaxed text-foreground/85">
-            90% of people say they've walked past a great connection at an
-            event — and never even knew it.
-          </p>
+          <Reveal variant="fade-up">
+            <p className="text-xl leading-relaxed text-foreground/85">
+              90% of people say they've walked past a great connection at an
+              event — and never even knew it.
+            </p>
+          </Reveal>
           <InkRule />
-          <p className="text-xl leading-relaxed text-foreground/85">
-            In person, you're scanning a room full of strangers with no way to
-            tell who's open to connect, or who's actually working toward
-            something like what you are. Online, it's worse: a hundred LinkedIn
-            links land in your inbox with zero context — no way to filter
-            who's actually worth a conversation.
-          </p>
-          <p className="text-xl leading-relaxed text-foreground">
-            The room is never the problem.{" "}
-            <span className="font-semibold text-primary">
-              Not knowing who's standing in it is.
-            </span>
-          </p>
+          <Reveal variant="fade-up" delay={120}>
+            <p className="text-xl leading-relaxed text-foreground/85">
+              In person, you're scanning a room full of strangers with no way to
+              tell who's open to connect, or who's actually working toward
+              something like what you are. Online, it's worse: a hundred LinkedIn
+              links land in your inbox with zero context — no way to filter
+              who's actually worth a conversation.
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={240}>
+            <p className="text-xl leading-relaxed text-foreground">
+              The room is never the problem.{" "}
+              <span className="font-semibold text-primary">
+                Not knowing who's standing in it is.
+              </span>
+            </p>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -183,80 +193,94 @@ function VillageStory() {
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-foreground text-background">
       {/* big abstract composition */}
-      <div className="pointer-events-none absolute -left-32 top-20 hidden h-[520px] w-[520px] rounded-full border-2 border-background/40 sm:block" />
+      <div className="anim-drift pointer-events-none absolute -left-32 top-20 hidden h-[520px] w-[520px] rounded-full border-2 border-background/40 sm:block" />
       <div
-        className="pointer-events-none absolute right-[-280px] bottom-[-280px] hidden h-[560px] w-[560px] opacity-80 sm:block"
+        className="anim-float pointer-events-none absolute right-[-280px] bottom-[-280px] hidden h-[560px] w-[560px] opacity-80 sm:block"
         style={{
           background: "var(--primary)",
           borderRadius: "9999px",
         }}
       />
-      <CobaltTriangle className="pointer-events-none absolute left-1/2 top-10 hidden h-32 w-32 opacity-90 sm:block" />
+      <CobaltTriangle className="anim-spin pointer-events-none absolute left-1/2 top-10 hidden h-32 w-32 opacity-90 sm:block" />
       <GrainOverlay />
 
       <div className="relative mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-40">
-        <p className="mb-6 font-display text-xs uppercase tracking-[0.3em] text-primary">
-          02 — The village
-        </p>
+        <Reveal variant="fade-up">
+          <p className="mb-6 font-display text-xs uppercase tracking-[0.3em] text-primary">
+            02 — The village
+          </p>
+        </Reveal>
 
         <div className="grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <h2 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-background sm:text-6xl lg:text-7xl">
-              Build your own
-              <br />
-              <span className="text-primary">village.</span>
-            </h2>
+            <Reveal variant="fade-up" delay={120}>
+              <h2 className="font-display text-5xl font-bold leading-[0.95] tracking-tight text-background sm:text-6xl lg:text-7xl">
+                Build your own
+                <br />
+                <span className="text-primary">village.</span>
+              </h2>
+            </Reveal>
           </div>
 
           <div className="lg:col-span-5 lg:pt-4">
-            <div className="border-l-2 border-background/40 pl-6">
-              <p className="font-display text-sm uppercase tracking-[0.2em] text-background/60">
-                Taba
-              </p>
-              <p className="mt-2 text-lg leading-relaxed text-background/90">
-                From <span className="italic">Old Tupi</span>, an Indigenous
-                Brazilian language. It means{" "}
-                <span className="font-semibold text-background">village</span> —
-                but the meaning shifts with relationship and context. Not a
-                fixed place. A circle that forms around who's there and what
-                you share.
-              </p>
-            </div>
+            <Reveal variant="slide-left" delay={240}>
+              <div className="border-l-2 border-background/40 pl-6">
+                <p className="font-display text-sm uppercase tracking-[0.2em] text-background/60">
+                  Taba
+                </p>
+                <p className="mt-2 text-lg leading-relaxed text-background/90">
+                  From <span className="italic">Old Tupi</span>, an Indigenous
+                  Brazilian language. It means{" "}
+                  <span className="font-semibold text-background">village</span> —
+                  but the meaning shifts with relationship and context. Not a
+                  fixed place. A circle that forms around who's there and what
+                  you share.
+                </p>
+              </div>
+            </Reveal>
           </div>
         </div>
 
         <div className="mt-20 grid items-center gap-16 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <div className="border-2 border-background/30 bg-foreground/40 p-10">
-              <OverlapCircles className="mx-auto" />
-              <p className="mt-6 text-center font-display text-sm uppercase tracking-[0.2em] text-background/70">
-                Shared ground, made visible
-              </p>
-            </div>
+            <Reveal variant="scale-in">
+              <div className="border-2 border-background/30 bg-foreground/40 p-10">
+                <OverlapCircles className="mx-auto" />
+                <p className="mt-6 text-center font-display text-sm uppercase tracking-[0.2em] text-background/70">
+                  Shared ground, made visible
+                </p>
+              </div>
+            </Reveal>
           </div>
           <div className="space-y-6 lg:col-span-7">
-            <p className="text-2xl leading-snug text-background sm:text-3xl">
-              A village isn't a crowd. It's a handful of people who{" "}
-              <span className="text-primary">chose each other</span> — because
-              there was a reason to.
-            </p>
-            <p className="text-lg leading-relaxed text-background/85">
-              We asked people what they actually want before approaching
-              someone at an event. The answer was simple, and the same every
-              time: they want to know{" "}
-              <span className="font-semibold text-background">
-                what they have in common
-              </span>{" "}
-              with that person, and{" "}
-              <span className="font-semibold text-background">
-                how open they are to connecting
-              </span>
-              .
-            </p>
-            <p className="text-lg leading-relaxed text-background/85">
-              Volume doesn't answer either question. A village does. That's
-              what Taba is for.
-            </p>
+            <Reveal variant="fade-up">
+              <p className="text-2xl leading-snug text-background sm:text-3xl">
+                A village isn't a crowd. It's a handful of people who{" "}
+                <span className="text-primary">chose each other</span> — because
+                there was a reason to.
+              </p>
+            </Reveal>
+            <Reveal variant="fade-up" delay={120}>
+              <p className="text-lg leading-relaxed text-background/85">
+                We asked people what they actually want before approaching
+                someone at an event. The answer was simple, and the same every
+                time: they want to know{" "}
+                <span className="font-semibold text-background">
+                  what they have in common
+                </span>{" "}
+                with that person, and{" "}
+                <span className="font-semibold text-background">
+                  how open they are to connecting
+                </span>
+                .
+              </p>
+            </Reveal>
+            <Reveal variant="fade-up" delay={240}>
+              <p className="text-lg leading-relaxed text-background/85">
+                Volume doesn't answer either question. A village does. That's
+                what Taba is for.
+              </p>
+            </Reveal>
           </div>
         </div>
       </div>
