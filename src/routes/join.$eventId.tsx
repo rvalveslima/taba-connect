@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { TabaLogo } from "@/components/taba-logo";
 import {
   DEMO_MODE_ENABLED,
   DEMO_EVENT_ID,
   DEMO_ATTENDEE_ACCOUNT_ID,
   signInAsDemoAttendee,
 } from "@/lib/demo-mode";
+
 
 type EventRow = {
   id: string;
@@ -187,37 +189,31 @@ function JoinPage() {
       : event.date_start ?? "";
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto grid min-h-screen max-w-5xl grid-cols-1 md:grid-cols-2">
-        {/* Left: event context */}
-        <aside className="relative flex flex-col justify-between overflow-hidden border-b border-border bg-primary p-8 text-primary-foreground md:border-b-0 md:border-r">
+    <div className="min-h-screen bg-background px-4 py-10">
+      <div className="mx-auto w-full max-w-md">
+        <div className="mb-6 flex justify-center">
+          <TabaLogo height={44} />
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           {event.image_url && (
-            <>
-              <img
-                src={event.image_url}
-                alt={event.name}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-primary/70" />
-            </>
+            <img
+              src={event.image_url}
+              alt={event.name}
+              className="h-32 w-full object-cover"
+            />
           )}
-          <div className="relative">
-            <p className="text-sm uppercase tracking-[0.18em] opacity-80">You're joining</p>
-            <h1 className="mt-3 text-4xl font-semibold leading-tight">{event.name}</h1>
-            {dateLine && <p className="mt-2 text-sm opacity-90">{dateLine}</p>}
-          </div>
-          <div className="relative mt-10 space-y-3 text-sm opacity-95">
-            <p className="font-medium">Build your own village.</p>
-            <p className="opacity-80">
-              Two or three real connections — chosen, not collected.
+          <div className="border-b border-border px-6 py-5">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              You're joining
             </p>
+            <h1 className="mt-1 text-2xl font-semibold leading-tight text-foreground">{event.name}</h1>
+            {dateLine && <p className="mt-1 text-sm text-muted-foreground">{dateLine}</p>}
           </div>
-        </aside>
 
-        {/* Right: form */}
-        <section className="flex flex-col justify-center p-8">
-          {hasSession === null ? null : isOrganizer ? (
-            <div className="space-y-4">
+          <section className="px-6 py-6">
+            {hasSession === null ? null : isOrganizer ? (
+              <div className="space-y-4">
+
               <div className="rounded-md border border-border bg-muted/40 p-4 text-sm">
                 <p className="font-medium text-foreground">You're the organizer of this event.</p>
                 <p className="mt-1 text-muted-foreground">
@@ -366,8 +362,11 @@ function JoinPage() {
               </form>
             </>
           )}
-        </section>
+          </section>
+        </div>
       </div>
+
+
 
       <style>{`
         .input {

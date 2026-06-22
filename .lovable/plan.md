@@ -1,22 +1,21 @@
 ## Plan
 
-Fix the attendee demo flow so clicking **“I’m here for the demo →”** from the Shebuilds join page reliably takes the judge to create their attendee profile.
+Redesign the join page into a single, centered, compact card. No more huge red side panel.
 
-### Steps
+### Layout
+- Single column, centered vertically and horizontally on `bg-background`.
+- Taba logo at top of card (using `<TabaLogo />`).
+- Compact event header inside the card:
+  - If `event.image_url` exists: small rounded banner image (e.g. ~h-32, full card width, `object-cover`) at top.
+  - Below: small uppercase "You're joining" eyebrow, event name (h1, ~text-2xl), and date line if present.
+- Divider, then the existing auth/join UI (Google, demo button, magic link form, signed-in state, organizer state) — unchanged in behavior and copy.
+- Drop the "Build your own village / Two or three real connections" tagline (was part of removed red panel).
 
-1. **Adjust demo attendee sign-in flow**
-   - Keep the one-click demo attendee button only on the event join/login screen.
-   - After signing in as the demo attendee, always navigate to `/event/$eventId/profile`.
-   - Do not let an existing pre-seeded membership/dashboard state bypass the profile creation screen.
+### Styling
+- Card: `max-w-md mx-auto`, rounded, border, soft shadow, padding.
+- Keep all existing buttons, links, error states, terms link, and the demo callout exactly as they are.
+- Remove the entire `<aside>` and the 2-column grid wrapper.
 
-2. **Make profile setup handle the demo account cleanly**
-   - Ensure the profile page can load when the demo attendee already has an event membership.
-   - Let the judge update/create the visible profile details before entering the attendee dashboard.
-
-3. **Preserve the seeded fake attendee dashboard**
-   - Keep the 20 fake profiles available for the Shebuilds demo dashboard.
-   - Keep the LinkedIn fake-data message when clicking the LinkedIn CTA for generated profiles.
-
-4. **Verify end-to-end**
-   - Test the exact path: organizer signs out → join page → click **“I’m here for the demo →”** → lands on profile creation.
-   - Confirm profile submission then leads to the attendee dashboard with the generated profiles.
+### Out of scope
+- No changes to auth logic, demo flow, or routing.
+- No copy changes beyond removing the side-panel tagline.
