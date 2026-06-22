@@ -224,6 +224,12 @@ function JoinPage() {
               >
                 {busy ? "Joining…" : "Join the event"}
               </button>
+              <p className="text-center text-xs text-muted-foreground">
+                By joining, you agree to our{" "}
+                <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                  Terms & Code of Conduct
+                </Link>.
+              </p>
               <button
                 onClick={handleSignOutAndSwitch}
                 disabled={busy}
@@ -307,6 +313,12 @@ function JoinPage() {
                 </button>
                 <p className="text-center text-xs text-muted-foreground">
                   Delivery can be slow — check Spam/Promotions.
+                </p>
+                <p className="text-center text-xs text-muted-foreground">
+                  By joining, you agree to our{" "}
+                  <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                    Terms & Code of Conduct
+                  </Link>.
                 </p>
               </form>
             </>
