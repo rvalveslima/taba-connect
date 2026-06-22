@@ -89,20 +89,6 @@ function ShareEventPage() {
 
             <SharePanel eventId={event.id} eventCode={event.event_code} />
 
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/app"
-                className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:opacity-90"
-              >
-                Back to my events
-              </Link>
-              <Link
-                to="/event/new"
-                className="rounded-full border border-border bg-background px-5 py-2.5 text-sm font-medium hover:bg-accent"
-              >
-                + Create another event
-              </Link>
-            </div>
           </>
         )}
       </main>
