@@ -490,7 +490,7 @@ function PricingTeaser() {
 
 /* ---------------- FINAL CTA ---------------- */
 
-function FinalCTA({ onJoin }: { onJoin: () => void }) {
+function FinalCTA({ onJoin, onDemo }: { onJoin: () => void; onDemo: () => void }) {
   return (
     <section className="relative overflow-hidden bg-primary text-primary-foreground">
       <div className="anim-drift pointer-events-none absolute -right-32 -top-32 hidden h-[520px] w-[520px] rounded-full border-2 border-primary-foreground/40 sm:block" />
