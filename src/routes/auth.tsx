@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { TabaLogo } from "@/components/taba-logo";
-import { DEMO_MODE_ENABLED, signInAsDemoOrganizer } from "@/lib/demo-mode";
+import { DEMO_MODE_ENABLED, signInAsDemoOrganizer, signInAsDemoAttendee } from "@/lib/demo-mode";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
