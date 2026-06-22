@@ -70,27 +70,23 @@ function langLabel(code: string) {
 
 function commonGroundBullets(me: Me, them: Profile, overlap: string[]): string[] {
   const bullets: string[] = [];
-  if (overlap.length > 0) {
-    const shown = overlap.slice(0, 2).join(" and ");
-    bullets.push(
-      overlap.length === 1
-        ? `Both here for ${shown}`
-        : `Both focused on ${shown}${overlap.length > 2 ? ` +${overlap.length - 2} more` : ""}`,
-    );
+  for (const tag of overlap) {
+    bullets.push(`Both focused on ${tag}`);
   }
   const sharedLangs = (me.languages ?? []).filter((l) =>
     (them.languages ?? []).some((tl) => tl.toLowerCase() === l.toLowerCase()),
   );
-  const nonEnglish = sharedLangs.find((l) => l.toLowerCase() !== "en");
-  if (nonEnglish) {
-    bullets.push(`Both speak ${langLabel(nonEnglish)}`);
-  } else if (sharedLangs.length > 0) {
-    bullets.push(`Both speak ${langLabel(sharedLangs[0])}`);
+  const ordered = [
+    ...sharedLangs.filter((l) => l.toLowerCase() !== "en"),
+    ...sharedLangs.filter((l) => l.toLowerCase() === "en"),
+  ];
+  for (const lang of ordered) {
+    bullets.push(`Both speak ${langLabel(lang)}`);
   }
   if (me.industry && them.industry && me.industry.toLowerCase() === them.industry.toLowerCase()) {
     bullets.push(`Both in ${them.industry}`);
   }
-  return bullets.slice(0, 3);
+  return bullets;
 }
 
 function differenceBullet(me: Me, them: Profile): string | null {
