@@ -152,10 +152,10 @@ function Problem() {
           </Reveal>
           <Reveal variant="fade-up" delay={120}>
             <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              You don't need more people to meet.
+              Your attendees don't need more people to meet.
               <br />
               <span className="text-primary">
-                You need to know who's worth talking to.
+                They need to know who's worth talking to.
               </span>
             </h2>
           </Reveal>
