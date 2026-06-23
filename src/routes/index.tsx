@@ -104,17 +104,20 @@ function Hero({ onJoin }: { onJoin: () => void }) {
           </Reveal>
           <Reveal variant="fade-up" delay={120}>
             <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl">
-              The hardest part of networking isn't talking to people.{" "}
-              <span className="text-primary">It's knowing who to talk to.</span>
+              Your event brings great people together.{" "}
+              <span className="text-primary">
+                Taba makes sure they actually connect.
+              </span>
             </h1>
           </Reveal>
           <Reveal variant="fade-up" delay={240}>
             <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
-              Taba helps you find the people who are{" "}
+              Taba matches attendees with the people aligned to their goals — so
+              networking becomes{" "}
               <span className="font-semibold text-foreground">
-                aligned with where you're headed
-              </span>{" "}
-              — so you don't have to guess who's worth approaching.
+                your event's standout feature
+              </span>
+              .
             </p>
           </Reveal>
 
