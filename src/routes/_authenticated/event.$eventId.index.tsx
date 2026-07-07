@@ -13,6 +13,7 @@ type DashboardSearch = {
   goal?: string;
   language?: string;
   open?: boolean;
+  q?: string;
 };
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/")({
