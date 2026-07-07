@@ -26,11 +26,21 @@ type OrganizerEvent = {
   attendees: number;
 };
 
+type WaitlistRow = {
+  id: string;
+  email: string;
+  source: string | null;
+  open_to_chat: boolean;
+  created_at: string;
+};
+
 function OrganizerHome() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string | null>(null);
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -40,11 +50,17 @@ function OrganizerHome() {
         setEmail(user?.email ?? null);
         if (!user) return;
 
-        const { data: rows } = await supabase
-          .from("events")
-          .select("id, name, date_start, date_end, image_url, created_at")
-          .eq("organizer_account_id", user.id)
-          .order("created_at", { ascending: false });
+        const [{ data: rows }, { data: acct }] = await Promise.all([
+          supabase
+            .from("events")
+            .select("id, name, date_start, date_end, image_url, created_at")
+            .eq("organizer_account_id", user.id)
+            .order("created_at", { ascending: false }),
+          supabase.from("accounts").select("is_admin").eq("id", user.id).maybeSingle(),
+        ]);
+
+        const admin = !!acct?.is_admin;
+        setIsAdmin(admin);
 
         const list = rows ?? [];
         const enriched = await Promise.all(
@@ -66,11 +82,19 @@ function OrganizerHome() {
 
         setEvents(enriched);
 
+        if (admin) {
+          const { data: wl } = await supabase
+            .from("organizer_waitlist")
+            .select("id, email, source, open_to_chat, created_at")
+            .order("created_at", { ascending: false });
+          setWaitlist((wl ?? []) as WaitlistRow[]);
+        }
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
 
   async function handleSignOut() {
     await supabase.auth.signOut();
