@@ -5,7 +5,7 @@ import { overlapTags, INTEREST_TAGS } from "@/lib/interest-tags";
 import { SharePanel } from "@/components/share-panel";
 import { TabaLogo } from "@/components/taba-logo";
 import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
-import { LANGUAGE_OPTIONS, LANGUAGE_ALIASES, languageLabel } from "@/lib/languages";
+import { LANGUAGE_OPTIONS, LANGUAGE_ALIASES } from "@/lib/languages";
 
 type DashboardSearch = {
   role?: string;
