@@ -264,6 +264,12 @@ export type Database = {
           organizer_account_id: string
         }[]
       }
+      get_my_event_connections: {
+        Args: { _event_id: string }
+        Returns: {
+          counterpart_membership_id: string
+        }[]
+      }
       is_event_member: { Args: { _event_id: string }; Returns: boolean }
       is_my_membership: { Args: { _membership_id: string }; Returns: boolean }
       shares_event_with: { Args: { _other: string }; Returns: boolean }

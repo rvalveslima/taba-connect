@@ -8,6 +8,7 @@ import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ATTENDEE_ACCOUNT_ID, DEMO_EVENT_ID } from "@/lib/demo-mode";
 import { friendlyError } from "@/lib/supabase-errors";
 import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
+import { LANGUAGE_OPTIONS, normalizeLanguages, type LanguageCode } from "@/lib/languages";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/profile")({
   head: () => ({ meta: [{ title: "Your profile — Taba" }] }),
@@ -31,10 +32,6 @@ type Account = {
   languages: string[] | null;
 };
 
-const COMMON_LANGUAGES = [
-  "English", "Português", "Español", "Français", "Deutsch", "Italiano",
-  "Nederlands", "中文", "日本語", "한국어", "العربية", "हिन्दी",
-];
 
 type Membership = {
   id: string;
@@ -105,6 +102,7 @@ function ProfilePage() {
         eventId === DEMO_EVENT_ID &&
         userData.user.id === DEMO_ATTENDEE_ACCOUNT_ID &&
         window.sessionStorage.getItem("taba-demo-attendee-profile-setup") === eventId;
+      const normalized = normalizeLanguages((acc as Account)?.languages ?? []);
       const accWithLangs = isDemoSetup
         ? {
             ...(acc as Account),
@@ -113,11 +111,11 @@ function ProfilePage() {
             company: null,
             location: null,
             linkedin_handle: null,
-            languages: ["English"],
+            languages: ["en"],
           }
         : {
             ...(acc as Account),
-            languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
+            languages: normalized.length ? normalized : ["en"],
           };
       setAccount(accWithLangs);
       setMembership(mem as Membership);
@@ -277,7 +275,7 @@ function ProfilePage() {
             </Field>
             <Field label="Languages">
               <LanguagesPicker
-                value={account.languages ?? ["English"]}
+                value={account.languages ?? ["en"]}
                 onChange={(langs) => setAccount({ ...account, languages: langs })}
               />
             </Field>
@@ -462,93 +460,37 @@ function LanguagesPicker({
   value: string[];
   onChange: (langs: string[]) => void;
 }) {
-  const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState("");
-  const langInputRef = useRef<HTMLInputElement | null>(null);
-  useEffect(() => {
-    if (adding) langInputRef.current?.focus();
-  }, [adding]);
+  const selected = new Set<string>(value.map((v) => v.toLowerCase()));
 
-  function remove(lang: string) {
-    onChange(value.filter((l) => l !== lang));
+  function toggle(code: LanguageCode) {
+    const next = new Set(selected);
+    if (next.has(code)) next.delete(code);
+    else next.add(code);
+    // Preserve LANGUAGE_OPTIONS order for a stable list.
+    onChange(LANGUAGE_OPTIONS.filter((l) => next.has(l.code)).map((l) => l.code));
   }
-  function add(lang: string) {
-    const v = lang.trim();
-    if (!v || value.includes(v)) return;
-    onChange([...value, v]);
-    setDraft("");
-    setAdding(false);
-  }
-
-  const suggestions = COMMON_LANGUAGES.filter((l) => !value.includes(l));
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
-        {value.map((lang) => (
-          <span
-            key={lang}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm"
-          >
-            {lang}
-            <button
-              type="button"
-              onClick={() => remove(lang)}
-              className="text-muted-foreground hover:text-foreground"
-              aria-label={`Remove ${lang}`}
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        {!adding ? (
+    <div className="flex flex-wrap gap-2">
+      {LANGUAGE_OPTIONS.map((l) => {
+        const on = selected.has(l.code);
+        return (
           <button
             type="button"
-            onClick={() => setAdding(true)}
-            className="rounded-full border border-dashed border-border px-3 py-1 text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+            key={l.code}
+            onClick={() => toggle(l.code)}
+            aria-pressed={on}
+            className={`rounded-full border px-3 py-1.5 text-sm transition ${
+              on
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-background text-foreground hover:border-foreground/60"
+            }`}
           >
-            + add
+            {l.label} {on && "✓"}
           </button>
-        ) : (
-          <input
-            ref={langInputRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                add(draft);
-              } else if (e.key === "Escape") {
-                setDraft("");
-                setAdding(false);
-              }
-            }}
-            onBlur={() => {
-              if (draft.trim()) add(draft);
-              else setAdding(false);
-            }}
-            placeholder="Type a language…"
-            className="rounded-full border border-border bg-background px-3 py-1 text-sm outline-none focus:border-foreground"
-          />
-        )}
-      </div>
-      {adding && suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {suggestions.slice(0, 8).map((s) => (
-            <button
-              type="button"
-              key={s}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                add(s);
-              }}
-              className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground hover:bg-foreground hover:text-background"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 }
+

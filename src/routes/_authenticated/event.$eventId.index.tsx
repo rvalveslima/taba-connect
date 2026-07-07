@@ -5,6 +5,7 @@ import { overlapTags, INTEREST_TAGS } from "@/lib/interest-tags";
 import { SharePanel } from "@/components/share-panel";
 import { TabaLogo } from "@/components/taba-logo";
 import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
+import { LANGUAGE_OPTIONS, LANGUAGE_ALIASES } from "@/lib/languages";
 
 type DashboardSearch = {
   role?: string;
@@ -12,6 +13,7 @@ type DashboardSearch = {
   goal?: string;
   language?: string;
   open?: boolean;
+  q?: string;
 };
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/")({
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/event/$eventId/")({
     goal: typeof search.goal === "string" ? search.goal : undefined,
     language: typeof search.language === "string" ? search.language : undefined,
     open: search.open === true || search.open === "true" ? true : undefined,
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
   }),
   errorComponent: ({ error, reset }) => (
     <RouteErrorFallback error={error} reset={reset} title="We couldn't load the attendees" />
@@ -74,6 +77,7 @@ function DashboardPage() {
   const [myTags, setMyTags] = useState<string[]>([]);
   const [myName, setMyName] = useState<string>("");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
+  const [connectionIds, setConnectionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   // filters — backed by URL search params
@@ -83,6 +87,7 @@ function DashboardPage() {
   const companyFilter = search.company ?? "all";
   const goalFilter = search.goal ?? "all";
   const openOnly = search.open === true;
+  const nameQuery = search.q ?? "";
 
   function setSearchParam(key: keyof DashboardSearch, value: string | boolean | undefined) {
     navigate({
@@ -90,7 +95,7 @@ function DashboardPage() {
       params: { eventId },
       search: (prev: DashboardSearch) => {
         const next = { ...prev } as DashboardSearch;
-        if (value === undefined || value === "all" || value === false) {
+        if (value === undefined || value === "all" || value === false || value === "") {
           delete next[key];
         } else {
           (next as any)[key] = value;
@@ -105,6 +110,7 @@ function DashboardPage() {
   const setCompanyFilter = (v: string) => setSearchParam("company", v);
   const setGoalFilter = (v: string) => setSearchParam("goal", v);
   const setOpenOnly = (v: boolean) => setSearchParam("open", v);
+  const setNameQuery = (v: string) => setSearchParam("q", v);
 
   useEffect(() => {
     (async () => {
@@ -112,9 +118,8 @@ function DashboardPage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      const [{ data: ev }, { data: codeData }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
+      const [{ data: ev }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
         supabase.from("events").select("name, organizer_account_id").eq("id", eventId).maybeSingle(),
-        supabase.rpc("get_event_code", { _event_id: eventId }),
         supabase.from("accounts").select("name").eq("id", userData.user.id).maybeSingle(),
         supabase
           .from("event_memberships")
@@ -139,8 +144,14 @@ function DashboardPage() {
         return;
       }
       setEventName(ev.name);
-      setEventCode((codeData as string | null) ?? null);
-      setIsOrganizer(ev.organizer_account_id === userData.user.id);
+      const organizer = ev.organizer_account_id === userData.user.id;
+      setIsOrganizer(organizer);
+
+      // Only organizers need the event code (used by SharePanel).
+      if (organizer) {
+        const { data: codeData } = await supabase.rpc("get_event_code", { _event_id: eventId });
+        setEventCode((codeData as string | null) ?? null);
+      }
 
       setMyName(myAcc?.name ?? "");
       setMyTags(mine);
@@ -158,6 +169,16 @@ function DashboardPage() {
         overlap: overlapTags(mine, r.goal_tags ?? []),
       }));
       setAttendees(mapped);
+
+      // Village = counterpart memberships from two-way message threads.
+      const { data: conn } = await supabase.rpc("get_my_event_connections", { _event_id: eventId });
+      const ids = new Set<string>(
+        Array.isArray(conn)
+          ? (conn as Array<{ counterpart_membership_id: string }>).map((c) => c.counterpart_membership_id)
+          : [],
+      );
+      setConnectionIds(ids);
+
       setLoading(false);
     })();
   }, [eventId, navigate]);
@@ -167,22 +188,9 @@ function DashboardPage() {
     [attendees],
   );
   const languageOptions = useMemo(
-    () => [
-      { value: "en", label: "English" },
-      { value: "fr", label: "French" },
-      { value: "pt", label: "Portuguese" },
-      { value: "es", label: "Spanish" },
-      { value: "de", label: "German" },
-    ],
+    () => LANGUAGE_OPTIONS.map((l) => ({ value: l.code, label: l.label })),
     [],
   );
-  const LANG_ALIASES: Record<string, string[]> = {
-    en: ["en", "english"],
-    fr: ["fr", "french", "français", "francais"],
-    pt: ["pt", "portuguese", "português", "portugues"],
-    es: ["es", "spanish", "español", "espanol"],
-    de: ["de", "german", "deutsch"],
-  };
   const companyOptions = useMemo(
     () => Array.from(new Set(attendees.map((a) => a.company).filter((v): v is string => !!v?.trim()))).sort(),
     [attendees],
@@ -196,22 +204,38 @@ function DashboardPage() {
     let v = attendees;
     if (roleFilter !== "all") v = v.filter((a) => (a.role ?? "").trim() === roleFilter);
     if (languageFilter !== "all") {
-      const aliases = (LANG_ALIASES[languageFilter] ?? [languageFilter]).map((s) => s.toLowerCase());
-      v = v.filter((a) => a.languages.some((l) => aliases.includes(l.toLowerCase())));
+      // Match by code first; fall back to alias mapping for legacy free-text values.
+      v = v.filter((a) =>
+        a.languages.some((l) => {
+          const lc = l.toLowerCase();
+          if (lc === languageFilter) return true;
+          return LANGUAGE_ALIASES[lc] === languageFilter;
+        }),
+      );
     }
     if (companyFilter !== "all") v = v.filter((a) => (a.company ?? "").trim() === companyFilter);
     if (goalFilter !== "all") v = v.filter((a) => a.tags.includes(goalFilter));
     if (openOnly) v = v.filter((a) => a.open_to_connect);
+    if (nameQuery.trim()) {
+      const q = nameQuery.trim().toLowerCase();
+      v = v.filter((a) => a.name.toLowerCase().includes(q));
+    }
     return [...v].sort((a, b) => {
       if (b.overlap.length !== a.overlap.length) return b.overlap.length - a.overlap.length;
       return a.name.localeCompare(b.name);
     });
-  }, [attendees, roleFilter, languageFilter, companyFilter, goalFilter, openOnly]);
+  }, [attendees, roleFilter, languageFilter, companyFilter, goalFilter, openOnly, nameQuery]);
+
+  const villagePeople = useMemo(
+    () => attendees.filter((a) => connectionIds.has(a.membership_id)),
+    [attendees, connectionIds],
+  );
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/", replace: true });
   }
+
 
   return (
     <div className="min-h-dvh bg-background">
@@ -248,6 +272,40 @@ function DashboardPage() {
 
         {isOrganizer && <SharePanel eventId={eventId} eventCode={eventCode} />}
 
+        {villagePeople.length > 0 && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3">
+              <h2 className="font-heading text-base font-semibold tracking-tight">Your village</h2>
+              <p className="text-xs text-muted-foreground">The connections you've made here.</p>
+            </div>
+            <ul className="flex gap-2 overflow-x-auto pb-1">
+              {villagePeople.map((p) => (
+                <li key={p.membership_id} className="shrink-0">
+                  <Link
+                    to="/event/$eventId/attendee/$membershipId"
+                    params={{ eventId, membershipId: p.membership_id }}
+                    className="flex w-40 items-center gap-2 rounded-xl border border-border bg-background p-2 transition hover:border-foreground/40"
+                  >
+                    <div
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full font-heading text-sm font-semibold"
+                      style={{
+                        background: "color-mix(in oklab, var(--primary) 22%, var(--card))",
+                        color: "var(--primary)",
+                      }}
+                    >
+                      {initials(p.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold">{displayName(p.name)}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{p.role ?? "—"}</p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Filter pills */}
         <div className="flex flex-wrap items-center gap-2">
           <FilterPill label="Role" value={roleFilter} onChange={setRoleFilter} options={roleOptions} />
@@ -268,6 +326,13 @@ function DashboardPage() {
             />
             Open only
           </button>
+          <input
+            type="search"
+            value={nameQuery}
+            onChange={(e) => setNameQuery(e.target.value)}
+            placeholder="Search by name…"
+            className="ml-auto w-40 rounded-full border border-border bg-card px-3 py-1.5 text-xs outline-none focus:border-foreground sm:w-48"
+          />
         </div>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -314,6 +379,7 @@ function DashboardPage() {
                 setGoalFilter("all");
                 setLanguageFilter("all");
                 setOpenOnly(false);
+                setNameQuery("");
               }}
               className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
             >
@@ -324,7 +390,7 @@ function DashboardPage() {
           <ul className="space-y-3">
             {visible.map((a) => (
               <li key={a.membership_id}>
-                <AttendeeCard eventId={eventId} a={a} myTags={myTags} />
+                <AttendeeCard eventId={eventId} a={a} />
               </li>
             ))}
           </ul>
@@ -334,9 +400,8 @@ function DashboardPage() {
   );
 }
 
-function AttendeeCard({ eventId, a, myTags }: { eventId: string; a: Attendee; myTags: string[] }) {
+function AttendeeCard({ eventId, a }: { eventId: string; a: Attendee }) {
   const filled = Math.min(a.overlap.length, OVERLAP_BAR_SEGMENTS);
-  const maxPossible = Math.max(myTags.length, OVERLAP_BAR_SEGMENTS);
   // Build short summary tail like "goal · track · language" or "industry — not open"
   const summaryBits: string[] = [];
   if (a.overlap.length > 0) summaryBits.push(...a.overlap.slice(0, 3).map((t) => t.toLowerCase()));
@@ -397,7 +462,7 @@ function AttendeeCard({ eventId, a, myTags }: { eventId: string; a: Attendee; my
           <p className="mt-2 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{a.overlap.length} shared</span>
             {tail && <> · {tail}</>}
-            {maxPossible > OVERLAP_BAR_SEGMENTS && a.overlap.length > OVERLAP_BAR_SEGMENTS && " ·"}
+            
           </p>
         </div>
       </div>
