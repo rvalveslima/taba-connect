@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           industry: string | null
+          is_admin: boolean
           languages: string[] | null
           linkedin_handle: string | null
           location: string | null
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string
           id: string
           industry?: string | null
+          is_admin?: boolean
           languages?: string[] | null
           linkedin_handle?: string | null
           location?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           created_at?: string
           id?: string
           industry?: string | null
+          is_admin?: boolean
           languages?: string[] | null
           linkedin_handle?: string | null
           location?: string | null
@@ -246,6 +249,10 @@ export type Database = {
     Functions: {
       find_event_by_code: { Args: { _code: string }; Returns: string }
       get_event_code: { Args: { _event_id: string }; Returns: string }
+      get_event_connection_count: {
+        Args: { _event_id: string }
+        Returns: number
+      }
       get_event_public_info: {
         Args: { _event_id: string }
         Returns: {
