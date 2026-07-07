@@ -8,6 +8,7 @@ import { TabaLogo } from "@/components/taba-logo";
 import { DEMO_ATTENDEE_ACCOUNT_ID, DEMO_EVENT_ID } from "@/lib/demo-mode";
 import { friendlyError } from "@/lib/supabase-errors";
 import { RouteErrorFallback, RouteNotFoundFallback } from "@/components/route-fallbacks";
+import { LANGUAGE_OPTIONS, normalizeLanguages, type LanguageCode } from "@/lib/languages";
 
 export const Route = createFileRoute("/_authenticated/event/$eventId/profile")({
   head: () => ({ meta: [{ title: "Your profile — Taba" }] }),
