@@ -66,25 +66,6 @@ function MarketingPage() {
   );
 }
 
-/* ---------------- NAV ---------------- */
-
-function Nav({ onJoin }: { onJoin: () => void }) {
-  return (
-    <header className="relative z-20 border-b-2 border-foreground bg-background">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
-        <TabaLogo height={32} />
-        <Button
-          onClick={onJoin}
-          className="shrink-0 rounded-none px-3 py-2 font-display text-[11px] uppercase tracking-wider sm:px-5 sm:text-sm"
-        >
-          <span className="sm:hidden">Early access</span>
-          <span className="hidden sm:inline">Become a founding organizer</span>
-        </Button>
-      </div>
-    </header>
-  );
-}
-
 /* ---------------- HERO ---------------- */
 
 function Hero({ onJoin }: { onJoin: () => void }) {
