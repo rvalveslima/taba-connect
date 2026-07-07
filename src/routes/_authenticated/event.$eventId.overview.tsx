@@ -63,7 +63,7 @@ function EventOverviewPage() {
             .select("id", { count: "exact", head: true })
             .eq("event_id", eventId)
             .eq("open_to_connect", true),
-          supabase.rpc("get_event_connection_count" as never, { _event_id: eventId }),
+          (supabase.rpc as (fn: string, args: Record<string, unknown>) => Promise<{ data: number | null }>)("get_event_connection_count", { _event_id: eventId }),
         ]);
 
         if (!ev) {
