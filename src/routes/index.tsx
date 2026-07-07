@@ -518,18 +518,7 @@ function EarlyAccess() {
               </form>
             )}
 
-            {DEMO_MODE_ENABLED && (
-              <p className="mt-6 text-sm text-foreground/70">
-                Want to see it in action first?{" "}
-                <button
-                  type="button"
-                  onClick={() => { void signInAsDemoOrganizer(); }}
-                  className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:opacity-80"
-                >
-                  Try the live demo →
-                </button>
-              </p>
-            )}
+            {DEMO_MODE_ENABLED && <DemoLink />}
           </div>
         </Reveal>
       </div>
