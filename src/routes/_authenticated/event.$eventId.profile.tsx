@@ -102,6 +102,7 @@ function ProfilePage() {
         eventId === DEMO_EVENT_ID &&
         userData.user.id === DEMO_ATTENDEE_ACCOUNT_ID &&
         window.sessionStorage.getItem("taba-demo-attendee-profile-setup") === eventId;
+      const normalized = normalizeLanguages((acc as Account)?.languages ?? []);
       const accWithLangs = isDemoSetup
         ? {
             ...(acc as Account),
@@ -110,11 +111,11 @@ function ProfilePage() {
             company: null,
             location: null,
             linkedin_handle: null,
-            languages: ["English"],
+            languages: ["en"],
           }
         : {
             ...(acc as Account),
-            languages: (acc as Account)?.languages?.length ? (acc as Account).languages : ["English"],
+            languages: normalized.length ? normalized : ["en"],
           };
       setAccount(accWithLangs);
       setMembership(mem as Membership);
