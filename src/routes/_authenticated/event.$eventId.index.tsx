@@ -272,6 +272,40 @@ function DashboardPage() {
 
         {isOrganizer && <SharePanel eventId={eventId} eventCode={eventCode} />}
 
+        {villagePeople.length > 0 && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3">
+              <h2 className="font-heading text-base font-semibold tracking-tight">Your village</h2>
+              <p className="text-xs text-muted-foreground">The connections you've made here.</p>
+            </div>
+            <ul className="flex gap-2 overflow-x-auto pb-1">
+              {villagePeople.map((p) => (
+                <li key={p.membership_id} className="shrink-0">
+                  <Link
+                    to="/event/$eventId/attendee/$membershipId"
+                    params={{ eventId, membershipId: p.membership_id }}
+                    className="flex w-40 items-center gap-2 rounded-xl border border-border bg-background p-2 transition hover:border-foreground/40"
+                  >
+                    <div
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full font-heading text-sm font-semibold"
+                      style={{
+                        background: "color-mix(in oklab, var(--primary) 22%, var(--card))",
+                        color: "var(--primary)",
+                      }}
+                    >
+                      {initials(p.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold">{displayName(p.name)}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{p.role ?? "—"}</p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Filter pills */}
         <div className="flex flex-wrap items-center gap-2">
           <FilterPill label="Role" value={roleFilter} onChange={setRoleFilter} options={roleOptions} />
@@ -292,6 +326,13 @@ function DashboardPage() {
             />
             Open only
           </button>
+          <input
+            type="search"
+            value={nameQuery}
+            onChange={(e) => setNameQuery(e.target.value)}
+            placeholder="Search by name…"
+            className="ml-auto w-40 rounded-full border border-border bg-card px-3 py-1.5 text-xs outline-none focus:border-foreground sm:w-48"
+          />
         </div>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
