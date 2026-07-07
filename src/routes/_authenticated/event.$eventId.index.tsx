@@ -463,7 +463,7 @@ function AttendeeCard({ eventId, a, myTags }: { eventId: string; a: Attendee; my
           <p className="mt-2 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{a.overlap.length} shared</span>
             {tail && <> · {tail}</>}
-            {maxPossible > OVERLAP_BAR_SEGMENTS && a.overlap.length > OVERLAP_BAR_SEGMENTS && " ·"}
+            
           </p>
         </div>
       </div>
