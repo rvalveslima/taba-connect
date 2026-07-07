@@ -274,8 +274,8 @@ function VillageStory() {
             </Reveal>
             <Reveal variant="fade-up" delay={240}>
               <p className="text-lg leading-relaxed text-background/85">
-                Volume doesn't answer either question. A village does. That's
-                what Taba is for.
+                Volume doesn't build that. A village does. That's what Taba is
+                for.
               </p>
             </Reveal>
           </div>
