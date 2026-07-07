@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { TabaLogo } from "@/components/taba-logo";
 import { OverlapCircles } from "@/components/overlap-circles";
