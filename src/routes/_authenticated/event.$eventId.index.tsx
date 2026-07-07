@@ -78,6 +78,7 @@ function DashboardPage() {
   const [myName, setMyName] = useState<string>("");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [connectionIds, setConnectionIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
 
   // filters — backed by URL search params
   const search = Route.useSearch();
