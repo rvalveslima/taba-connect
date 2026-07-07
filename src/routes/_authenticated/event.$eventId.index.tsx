@@ -400,9 +400,8 @@ function DashboardPage() {
   );
 }
 
-function AttendeeCard({ eventId, a, myTags }: { eventId: string; a: Attendee; myTags: string[] }) {
+function AttendeeCard({ eventId, a }: { eventId: string; a: Attendee }) {
   const filled = Math.min(a.overlap.length, OVERLAP_BAR_SEGMENTS);
-  const maxPossible = Math.max(myTags.length, OVERLAP_BAR_SEGMENTS);
   // Build short summary tail like "goal · track · language" or "industry — not open"
   const summaryBits: string[] = [];
   if (a.overlap.length > 0) summaryBits.push(...a.overlap.slice(0, 3).map((t) => t.toLowerCase()));
