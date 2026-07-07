@@ -48,7 +48,6 @@ function scrollToWaitlist() {
 }
 
 function MarketingPage() {
-  useNavigate(); // keep hook parity; /auth?as=organizer route stays functional elsewhere
   const goWaitlist = () => scrollToWaitlist();
 
   return (
