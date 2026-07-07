@@ -268,6 +268,16 @@ function DecisionPage() {
           </div>
         </section>
 
+        {!them.open_to_connect && (
+          <section
+            className="rounded-xl border border-border p-4 text-sm leading-relaxed"
+            style={{ background: "color-mix(in oklab, var(--muted) 60%, transparent)" }}
+          >
+            <span className="font-medium text-foreground">{fn} isn't open to new connections right now.</span>{" "}
+            <span className="text-muted-foreground">You can still reach out — just keep it thoughtful.</span>
+          </section>
+        )}
+
         {/* Overlap motif */}
         <section className="flex flex-col items-center">
           <OverlapCircles count={bullets.length} />
