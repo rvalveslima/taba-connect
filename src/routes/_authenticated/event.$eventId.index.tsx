@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/event/$eventId/")({
     goal: typeof search.goal === "string" ? search.goal : undefined,
     language: typeof search.language === "string" ? search.language : undefined,
     open: search.open === true || search.open === "true" ? true : undefined,
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
   }),
   errorComponent: ({ error, reset }) => (
     <RouteErrorFallback error={error} reset={reset} title="We couldn't load the attendees" />
