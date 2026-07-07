@@ -526,6 +526,29 @@ function EarlyAccess() {
   );
 }
 
+function DemoLink() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  return (
+    <p className="mt-6 text-sm text-foreground/70">
+      Want to see it in action first?{" "}
+      <button
+        type="button"
+        disabled={loading}
+        onClick={async () => {
+          setLoading(true);
+          const ok = await signInAsDemoOrganizer();
+          if (ok) navigate({ to: "/organizer", replace: true });
+          else setLoading(false);
+        }}
+        className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:opacity-80 disabled:opacity-60"
+      >
+        {loading ? "Starting demo…" : "Try the live demo →"}
+      </button>
+    </p>
+  );
+}
+
 /* ---------------- FINAL CTA ---------------- */
 
 function FinalCTA({ onJoin }: { onJoin: () => void }) {
