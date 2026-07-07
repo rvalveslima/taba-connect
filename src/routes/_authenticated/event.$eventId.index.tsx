@@ -379,6 +379,7 @@ function DashboardPage() {
                 setGoalFilter("all");
                 setLanguageFilter("all");
                 setOpenOnly(false);
+                setNameQuery("");
               }}
               className="text-xs font-medium text-foreground underline-offset-4 hover:underline"
             >
