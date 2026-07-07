@@ -390,7 +390,7 @@ function DashboardPage() {
           <ul className="space-y-3">
             {visible.map((a) => (
               <li key={a.membership_id}>
-                <AttendeeCard eventId={eventId} a={a} myTags={myTags} />
+                <AttendeeCard eventId={eventId} a={a} />
               </li>
             ))}
           </ul>
