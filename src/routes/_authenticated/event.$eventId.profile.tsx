@@ -275,7 +275,7 @@ function ProfilePage() {
             </Field>
             <Field label="Languages">
               <LanguagesPicker
-                value={account.languages ?? ["English"]}
+                value={account.languages ?? ["en"]}
                 onChange={(langs) => setAccount({ ...account, languages: langs })}
               />
             </Field>
