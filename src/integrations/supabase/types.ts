@@ -220,18 +220,21 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          open_to_chat: boolean
           source: string | null
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
+          open_to_chat?: boolean
           source?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
+          open_to_chat?: boolean
           source?: string | null
         }
         Relationships: []

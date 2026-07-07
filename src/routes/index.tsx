@@ -5,6 +5,7 @@ import { OverlapCircles } from "@/components/overlap-circles";
 import { Reveal } from "@/components/marketing/reveal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ClayCircle,
   CobaltTriangle,
@@ -18,22 +19,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/supabase-errors";
 
-
+const WAITLIST_ANCHOR = "early-access";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Taba — build your own village at your event" },
+      { title: "Taba — networking that becomes your event's standout feature" },
       {
         name: "description",
         content:
-          "Events generate contacts, not connections. Taba helps attendees leave with 2–3 real connections instead of a pile of LinkedIn adds.",
+          "Taba turns event networking into real, measurable connections — so attendees leave with people they'll still be talking to next month, and you have the numbers to prove it.",
       },
-      { property: "og:title", content: "Taba — build your own village" },
+      { property: "og:title", content: "Taba — become a founding organizer" },
       {
         property: "og:description",
         content:
-          "Depth over volume. A handful of chosen connections, not a crowd of contacts. For organizers building events that matter.",
+          "For event organizers: make networking your standout feature and get the numbers to prove it. Founding organizers run their first events free.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -41,20 +42,26 @@ export const Route = createFileRoute("/")({
   component: MarketingPage,
 });
 
+function scrollToWaitlist() {
+  const el = document.getElementById(WAITLIST_ANCHOR);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function MarketingPage() {
-  const navigate = useNavigate();
-  const goOrganizer = () =>
-    navigate({ to: "/auth", search: { as: "organizer" } as never });
+  useNavigate(); // keep hook parity; /auth?as=organizer route stays functional elsewhere
+  const goWaitlist = () => scrollToWaitlist();
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <Hero onJoin={goOrganizer} />
+      
+      <Hero onJoin={goWaitlist} />
       <Problem />
       <VillageStory />
       <HowItWorks />
-      <WhoItsFor />
-      <PricingTeaser />
-      <FinalCTA onJoin={goOrganizer} />
+      <NotAnotherPlatform />
+      <WhatYouGetBack />
+      <EarlyAccess />
+      <FinalCTA onJoin={goWaitlist} />
       <Footer />
     </div>
   );
@@ -71,8 +78,8 @@ function Nav({ onJoin }: { onJoin: () => void }) {
           onClick={onJoin}
           className="shrink-0 rounded-none px-3 py-2 font-display text-[11px] uppercase tracking-wider sm:px-5 sm:text-sm"
         >
-          <span className="sm:hidden">Organize</span>
-          <span className="hidden sm:inline">Join as organizer</span>
+          <span className="sm:hidden">Early access</span>
+          <span className="hidden sm:inline">Become a founding organizer</span>
         </Button>
       </div>
     </header>
@@ -84,7 +91,6 @@ function Nav({ onJoin }: { onJoin: () => void }) {
 function Hero({ onJoin }: { onJoin: () => void }) {
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground">
-      {/* Geometric backdrop */}
       <GridLines className="absolute inset-0 h-full w-full" />
       <ClayCircle className="anim-drift pointer-events-none absolute -right-32 -top-32 hidden h-[420px] w-[420px] opacity-95 sm:block" />
       <CobaltTriangle className="anim-float pointer-events-none absolute -bottom-16 left-[8%] hidden h-56 w-56 opacity-90 sm:block" />
@@ -112,12 +118,12 @@ function Hero({ onJoin }: { onJoin: () => void }) {
           </Reveal>
           <Reveal variant="fade-up" delay={240}>
             <p className="mt-8 max-w-xl text-lg text-foreground/80 sm:text-xl">
-              Taba matches attendees with the people aligned to their goals — so
-              networking becomes{" "}
+              Attendees who leave with real connections rate the event higher,
+              come back, and bring people with them. Taba makes networking{" "}
               <span className="font-semibold text-foreground">
                 your event's standout feature
-              </span>
-              .
+              </span>{" "}
+              — and gives you the numbers to prove it worked.
             </p>
           </Reveal>
 
@@ -128,7 +134,7 @@ function Hero({ onJoin }: { onJoin: () => void }) {
                 size="lg"
                 className="rounded-none px-7 py-6 font-display text-base uppercase tracking-wider"
               >
-                Join as organizer →
+                Become a founding organizer →
               </Button>
             </div>
           </Reveal>
@@ -163,18 +169,20 @@ function Problem() {
         <div className="space-y-8 lg:col-span-7 lg:pt-2">
           <Reveal variant="fade-up">
             <p className="text-xl leading-relaxed text-foreground/85">
-              90% of people say they've walked past a great connection at an
-              event — and never even knew it.
+              Here's the loop that plays out at almost every event: an attendee
+              shows up, scans a room full of strangers with no way to tell who
+              shares their goals or who's open to talking. They play it safe.
+              They add a few people on LinkedIn on the way out. Nobody follows
+              up. The connection dies.
             </p>
           </Reveal>
           <InkRule />
           <Reveal variant="fade-up" delay={120}>
             <p className="text-xl leading-relaxed text-foreground/85">
-              In person, you're scanning a room full of strangers with no way to
-              tell who's open to connect, or who's actually working toward
-              something like what you are. Online, it's worse: a hundred LinkedIn
-              links land in your inbox with zero context — no way to filter
-              who's actually worth a conversation.
+              When we asked attendees what would actually change this, the
+              answer was the same every time: they want to know what they have
+              in common with someone — and whether that person is open to
+              connecting — <em>before</em> they walk over.
             </p>
           </Reveal>
           <Reveal variant="fade-up" delay={240}>
@@ -182,7 +190,8 @@ function Problem() {
               The room is never the problem.{" "}
               <span className="font-semibold text-primary">
                 Not knowing who's standing in it is.
-              </span>
+              </span>{" "}
+              And it's your event that gets remembered as "fine" because of it.
             </p>
           </Reveal>
         </div>
@@ -191,13 +200,11 @@ function Problem() {
   );
 }
 
-
 /* ---------------- VILLAGE STORY ---------------- */
 
 function VillageStory() {
   return (
     <section className="relative overflow-hidden border-b-2 border-foreground bg-foreground text-background">
-      {/* big abstract composition */}
       <div className="anim-drift pointer-events-none absolute -left-32 top-20 hidden h-[520px] w-[520px] rounded-full border-2 border-background/40 sm:block" />
       <div
         className="anim-float pointer-events-none absolute right-[-280px] bottom-[-280px] hidden h-[560px] w-[560px] opacity-80 sm:block"
@@ -265,21 +272,6 @@ function VillageStory() {
                 there was a reason to.
               </p>
             </Reveal>
-            <Reveal variant="fade-up" delay={120}>
-              <p className="text-lg leading-relaxed text-background/85">
-                We asked people what they actually want before approaching
-                someone at an event. The answer was simple, and the same every
-                time: they want to know{" "}
-                <span className="font-semibold text-background">
-                  what they have in common
-                </span>{" "}
-                with that person, and{" "}
-                <span className="font-semibold text-background">
-                  how open they are to connecting
-                </span>
-                .
-              </p>
-            </Reveal>
             <Reveal variant="fade-up" delay={240}>
               <p className="text-lg leading-relaxed text-background/85">
                 Volume doesn't answer either question. A village does. That's
@@ -298,9 +290,15 @@ function VillageStory() {
 function HowItWorks() {
   const steps = [
     {
+      n: "00",
+      title: "You share one link",
+      body: "Create your event, get a join link, drop it in your confirmation email. That's the whole setup.",
+      shape: <InkSquare className="h-16 w-16" />,
+    },
+    {
       n: "01",
       title: "Join the event",
-      body: "An organizer shares a join link. One tap. No app store, no extra account.",
+      body: "An organizer shares a join link. One tap in the browser, and they're in.",
       shape: <ClayCircle className="h-16 w-16" />,
     },
     {
@@ -329,13 +327,13 @@ function HowItWorks() {
             </Reveal>
             <Reveal variant="fade-up" delay={120}>
               <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-                Three steps. From an attendee's point of view.
+                One step for you. Three for them.
               </h2>
             </Reveal>
           </div>
         </div>
 
-        <div className="grid gap-px border-2 border-foreground bg-foreground sm:grid-cols-3">
+        <div className="grid gap-px border-2 border-foreground bg-foreground sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s, i) => (
             <Reveal key={s.n} variant="fade-up" delay={i * 140}>
               <div className="flex h-full flex-col gap-6 bg-background p-8">
@@ -358,36 +356,39 @@ function HowItWorks() {
   );
 }
 
-/* ---------------- WHO IT'S FOR ---------------- */
+/* ---------------- NOT ANOTHER PLATFORM ---------------- */
 
-function WhoItsFor() {
+function NotAnotherPlatform() {
   return (
     <section className="relative border-b-2 border-foreground bg-background">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-24 lg:grid-cols-12 lg:px-10 lg:py-28">
         <div className="lg:col-span-4">
           <Reveal variant="fade-up">
             <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
-              04 — Positioning
+              04 — Not another platform
             </p>
           </Reveal>
           <Reveal variant="fade-up" delay={120}>
             <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-              Built for the event itself.
+              You already run enough tools. This isn't one of them.
             </h2>
           </Reveal>
         </div>
-        <div className="lg:col-span-8 lg:pt-2">
+        <div className="space-y-6 lg:col-span-8 lg:pt-2">
           <Reveal variant="fade-up">
             <p className="text-xl leading-relaxed text-foreground/85">
-              Taba is for a single event, where attendees decide who they want to
-              meet — and how deep that goes. It isn't an algorithm matching you to
-              strangers at scale, and it isn't another community platform asking
-              for ongoing engagement.
+              Your event website, your registration, your agenda app — Taba
+              doesn't replace any of it, and doesn't ask to be integrated with
+              it. It's one link. Attendees tap it in the browser: no app
+              download, no new account to manage, no support tickets landing on
+              you.
             </p>
           </Reveal>
           <Reveal variant="fade-up" delay={120}>
-            <p className="mt-4 text-xl leading-relaxed text-foreground/85">
-              One event. Real depth. Then out of your way.
+            <p className="text-xl leading-relaxed text-foreground/85">
+              And it's built for a single event — not another community platform
+              demanding ongoing engagement from you or your attendees. One
+              event. Real depth. Then out of everyone's way.
             </p>
           </Reveal>
         </div>
@@ -396,20 +397,64 @@ function WhoItsFor() {
   );
 }
 
-/* ---------------- PRICING TEASER ---------------- */
+/* ---------------- WHAT YOU GET BACK ---------------- */
 
-const pricingSchema = z.object({
+function WhatYouGetBack() {
+  return (
+    <section className="relative border-b-2 border-foreground bg-background">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-24 lg:grid-cols-12 lg:px-10 lg:py-28">
+        <div className="lg:col-span-5">
+          <Reveal variant="fade-up">
+            <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
+              05 — What you get back
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={120}>
+            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+              Networking you can finally put a number on.
+            </h2>
+          </Reveal>
+        </div>
+        <div className="space-y-6 lg:col-span-7 lg:pt-2">
+          <Reveal variant="fade-up">
+            <p className="text-xl leading-relaxed text-foreground/85">
+              Taba counts a connection only when two people actually message
+              each other — both ways. Not profile views, not badge scans, not
+              LinkedIn adds. Real conversations.
+            </p>
+          </Reveal>
+          <Reveal variant="fade-up" delay={120}>
+            <p className="text-xl leading-relaxed text-foreground/85">
+              After your event, you know exactly how many connections it
+              created. Put it in your recap email. Show it to your sponsors.
+              Lead your next campaign with it:{" "}
+              <em className="text-foreground">
+                "Attendees made 214 real connections last time. Come make
+                yours."
+              </em>
+            </p>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- EARLY ACCESS (waitlist) ---------------- */
+
+const waitlistSchema = z.object({
   email: z.string().trim().email().max(255),
 });
 
-function PricingTeaser() {
+function EarlyAccess() {
   const [email, setEmail] = useState("");
+  const [openToChat, setOpenToChat] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = pricingSchema.safeParse({ email });
+    const parsed = waitlistSchema.safeParse({ email });
     if (!parsed.success) {
       toast.error("Enter a valid email");
       return;
@@ -417,19 +462,25 @@ function PricingTeaser() {
     setSubmitting(true);
     const { error } = await supabase
       .from("organizer_waitlist")
-      .insert({ email: parsed.data.email, source: "pricing" });
+      .insert({
+        email: parsed.data.email,
+        source: "early_access",
+        open_to_chat: openToChat,
+      });
     setSubmitting(false);
     if (error && error.code !== "23505") {
       toast.error(friendlyError(error, "We couldn't add you to the waitlist. Try again."));
       return;
-
     }
     setDone(true);
-    toast.success("You're on the list.");
+    toast.success("You're in. We'll be in touch soon.");
   }
 
   return (
-    <section className="relative overflow-hidden border-b-2 border-foreground bg-background">
+    <section
+      id={WAITLIST_ANCHOR}
+      className="relative overflow-hidden border-b-2 border-foreground bg-background scroll-mt-24"
+    >
       <ClayCircle className="anim-drift pointer-events-none absolute -left-20 -bottom-20 hidden h-60 w-60 opacity-90 sm:block" />
       <InkSquare className="anim-spin pointer-events-none absolute right-[12%] top-12 hidden h-6 w-6 sm:block" />
 
@@ -437,40 +488,52 @@ function PricingTeaser() {
         <Reveal variant="scale-in">
           <div className="border-2 border-foreground bg-background p-10 lg:p-14">
             <p className="mb-4 font-display text-xs uppercase tracking-[0.25em] text-primary">
-              05 — Pricing
+              06 — Early access
             </p>
             <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-              Pricing for organizers is on the way.
+              Be a founding organizer.
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-foreground/80">
-              Join the waitlist to be first to know when plans open up — and to
-              lock in early-access pricing.
+              Taba is opening to a small group of organizers first. Founding
+              organizers run their first events free, get a direct line to shape
+              what gets built, and lock in early-access terms before public
+              plans exist.
             </p>
 
             {done ? (
               <p className="mt-8 font-display text-lg text-foreground">
-                You're on the list. We'll be in touch.
+                You're in. We'll be in touch soon.
               </p>
             ) : (
-              <form
-                onSubmit={handleSubmit}
-                className="mt-8 flex flex-col gap-3 sm:flex-row"
-              >
-                <Input
-                  type="email"
-                  required
-                  placeholder="you@yourevent.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-none border-2 border-foreground bg-background sm:flex-1"
-                />
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="h-12 rounded-none px-7 font-display uppercase tracking-wider"
-                >
-                  {submitting ? "Adding…" : "Notify me"}
-                </Button>
+              <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="you@yourevent.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 rounded-none border-2 border-foreground bg-background sm:flex-1"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="h-12 rounded-none px-7 font-display uppercase tracking-wider"
+                  >
+                    {submitting ? "Adding…" : "Get early access"}
+                  </Button>
+                </div>
+                <label className="flex items-start gap-3 text-sm text-foreground/80">
+                  <Checkbox
+                    checked={openToChat}
+                    onCheckedChange={(v) => setOpenToChat(v === true)}
+                    className="mt-0.5 rounded-none border-2 border-foreground"
+                  />
+                  <span>
+                    I'm open to a 20-minute chat about how networking works at
+                    my events.
+                  </span>
+                </label>
               </form>
             )}
           </div>
@@ -492,7 +555,7 @@ function FinalCTA({ onJoin }: { onJoin: () => void }) {
       <div className="relative mx-auto max-w-7xl px-6 py-28 text-center lg:px-10 lg:py-36">
         <Reveal variant="fade-up">
           <p className="mb-6 font-display text-xs uppercase tracking-[0.3em]">
-            06 — Your village, your event
+            07 — Your village, your event
           </p>
         </Reveal>
         <Reveal variant="fade-up" delay={120}>
@@ -510,7 +573,7 @@ function FinalCTA({ onJoin }: { onJoin: () => void }) {
               variant="secondary"
               className="rounded-none border-2 border-foreground bg-background px-8 py-6 font-display text-base uppercase tracking-wider text-foreground hover:bg-background/90"
             >
-              Join as organizer →
+              Become a founding organizer →
             </Button>
           </div>
         </Reveal>
@@ -541,6 +604,5 @@ function Footer() {
         </div>
       </div>
     </footer>
-
   );
 }
