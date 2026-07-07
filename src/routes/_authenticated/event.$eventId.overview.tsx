@@ -31,16 +31,6 @@ function formatDateRange(start: string | null, end: string | null) {
   return fmt((start ?? end)!);
 }
 
-// Deterministic fake "LinkedIn messages sent" count for the demo, derived
-// from the eventId so the number is stable per event between page loads.
-function fakeMessagesSent(eventId: string, attendees: number) {
-  let hash = 0;
-  for (let i = 0; i < eventId.length; i++) hash = (hash * 31 + eventId.charCodeAt(i)) >>> 0;
-  const base = 30 + (hash % 150); // 30–179
-  // Scale gently with real attendee count so larger events look livelier.
-  return base + attendees * 3;
-}
-
 function EventOverviewPage() {
   const { eventId } = Route.useParams();
   const navigate = useNavigate();
@@ -48,6 +38,8 @@ function EventOverviewPage() {
   const [event, setEvent] = useState<EventRow | null>(null);
   const [eventCode, setEventCode] = useState<string | null>(null);
   const [attendees, setAttendees] = useState(0);
+  const [openToConnect, setOpenToConnect] = useState(0);
+  const [connections, setConnections] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -55,7 +47,7 @@ function EventOverviewPage() {
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) return;
 
-        const [{ data: ev }, { data: code }, { count }] = await Promise.all([
+        const [{ data: ev }, { data: code }, { count }, { count: openCount }, { data: connCount }] = await Promise.all([
           supabase
             .from("events")
             .select("name, date_start, date_end, image_url, organizer_account_id")
@@ -66,6 +58,12 @@ function EventOverviewPage() {
             .from("event_memberships")
             .select("id", { count: "exact", head: true })
             .eq("event_id", eventId),
+          supabase
+            .from("event_memberships")
+            .select("id", { count: "exact", head: true })
+            .eq("event_id", eventId)
+            .eq("open_to_connect", true),
+          supabase.rpc("get_event_connection_count" as never, { _event_id: eventId }),
         ]);
 
         if (!ev) {
@@ -80,13 +78,14 @@ function EventOverviewPage() {
         setEvent(ev as EventRow);
         setEventCode((code as string | null) ?? null);
         setAttendees(count ?? 0);
+        setOpenToConnect(openCount ?? 0);
+        setConnections(typeof connCount === "number" ? connCount : 0);
       } finally {
         setLoading(false);
       }
     })();
   }, [eventId, navigate]);
 
-  const messagesSent = event ? fakeMessagesSent(eventId, attendees) : 0;
 
   return (
     <div className="min-h-dvh bg-background">
