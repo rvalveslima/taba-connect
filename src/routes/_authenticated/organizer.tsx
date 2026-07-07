@@ -26,11 +26,21 @@ type OrganizerEvent = {
   attendees: number;
 };
 
+type WaitlistRow = {
+  id: string;
+  email: string;
+  source: string | null;
+  open_to_chat: boolean;
+  created_at: string;
+};
+
 function OrganizerHome() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string | null>(null);
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -40,11 +50,17 @@ function OrganizerHome() {
         setEmail(user?.email ?? null);
         if (!user) return;
 
-        const { data: rows } = await supabase
-          .from("events")
-          .select("id, name, date_start, date_end, image_url, created_at")
-          .eq("organizer_account_id", user.id)
-          .order("created_at", { ascending: false });
+        const [{ data: rows }, { data: acct }] = await Promise.all([
+          supabase
+            .from("events")
+            .select("id, name, date_start, date_end, image_url, created_at")
+            .eq("organizer_account_id", user.id)
+            .order("created_at", { ascending: false }),
+          supabase.from("accounts").select("is_admin").eq("id", user.id).maybeSingle(),
+        ]);
+
+        const admin = !!acct?.is_admin;
+        setIsAdmin(admin);
 
         const list = rows ?? [];
         const enriched = await Promise.all(
@@ -66,11 +82,19 @@ function OrganizerHome() {
 
         setEvents(enriched);
 
+        if (admin) {
+          const { data: wl } = await supabase
+            .from("organizer_waitlist")
+            .select("id, email, source, open_to_chat, created_at")
+            .order("created_at", { ascending: false });
+          setWaitlist((wl ?? []) as WaitlistRow[]);
+        }
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -189,6 +213,48 @@ function OrganizerHome() {
               </li>
             ))}
           </ul>
+        )}
+
+        {isAdmin && (
+          <section className="space-y-3">
+            <div>
+              <h2 className="font-heading text-xl font-semibold tracking-tight">
+                Early-access signups
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {waitlist.length} signup{waitlist.length === 1 ? "" : "s"} from the marketing page.
+              </p>
+            </div>
+            {waitlist.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-sm text-muted-foreground">
+                No signups yet.
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {waitlist.map((w) => (
+                  <li
+                    key={w.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate text-sm font-medium">{w.email}</span>
+                        {w.open_to_chat && (
+                          <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                            open to chat
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                        {w.source && <span>source: {w.source}</span>}
+                        <span>{new Date(w.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         )}
 
         <FeedbackCard />
