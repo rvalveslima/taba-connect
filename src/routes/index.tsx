@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { TabaLogo } from "@/components/taba-logo";
 import { OverlapCircles } from "@/components/overlap-circles";
@@ -518,22 +518,34 @@ function EarlyAccess() {
               </form>
             )}
 
-            {DEMO_MODE_ENABLED && (
-              <p className="mt-6 text-sm text-foreground/70">
-                Want to see it in action first?{" "}
-                <button
-                  type="button"
-                  onClick={() => { void signInAsDemoOrganizer(); }}
-                  className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:opacity-80"
-                >
-                  Try the live demo →
-                </button>
-              </p>
-            )}
+            {DEMO_MODE_ENABLED && <DemoLink />}
           </div>
         </Reveal>
       </div>
     </section>
+  );
+}
+
+function DemoLink() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  return (
+    <p className="mt-6 text-sm text-foreground/70">
+      Want to see it in action first?{" "}
+      <button
+        type="button"
+        disabled={loading}
+        onClick={async () => {
+          setLoading(true);
+          const ok = await signInAsDemoOrganizer();
+          if (ok) navigate({ to: "/organizer", replace: true });
+          else setLoading(false);
+        }}
+        className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:opacity-80 disabled:opacity-60"
+      >
+        {loading ? "Starting demo…" : "Try the live demo →"}
+      </button>
+    </p>
   );
 }
 
