@@ -1,0 +1,1 @@
+ALTER TABLE public.organizer_waitlist ADD COLUMN IF NOT EXISTS open_to_chat boolean NOT NULL DEFAULT false;
