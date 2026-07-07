@@ -516,6 +516,16 @@ function EarlyAccess() {
                 </label>
               </form>
             )}
+
+            <p className="mt-6 text-sm text-foreground/70">
+              Want to see it in action first?{" "}
+              <Link
+                to="/auth"
+                className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:opacity-80"
+              >
+                Try the live demo →
+              </Link>
+            </p>
           </div>
         </Reveal>
       </div>
