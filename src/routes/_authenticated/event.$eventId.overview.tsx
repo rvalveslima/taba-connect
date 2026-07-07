@@ -142,16 +142,29 @@ function EventOverviewPage() {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <StatCard
-                label="Attendees subscribed"
-                value={(attendees + 30).toLocaleString()}
-                hint={`${attendees + 30} people joined`}
+                label="Attendees joined"
+                value={attendees.toLocaleString()}
+                hint={`${attendees} member${attendees === 1 ? "" : "s"}`}
               />
               <StatCard
-                label="LinkedIn messages sent"
-                value={messagesSent.toLocaleString()}
-                hint="Demo data"
+                label="Open to connect"
+                value={
+                  attendees > 0
+                    ? `${Math.round((openToConnect / attendees) * 100)}%`
+                    : "—"
+                }
+                hint={`${openToConnect} of ${attendees}`}
+              />
+              <StatCard
+                label="Connections made"
+                value={connections.toLocaleString()}
+                hint={
+                  connections === 0
+                    ? "Connections appear as attendees start real conversations"
+                    : `${connections} two-way conversation${connections === 1 ? "" : "s"}`
+                }
               />
             </section>
 
