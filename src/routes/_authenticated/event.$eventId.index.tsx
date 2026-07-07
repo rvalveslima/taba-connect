@@ -77,7 +77,7 @@ function DashboardPage() {
   const [myTags, setMyTags] = useState<string[]>([]);
   const [myName, setMyName] = useState<string>("");
   const [attendees, setAttendees] = useState<Attendee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [connectionIds, setConnectionIds] = useState<Set<string>>(new Set());
 
   // filters — backed by URL search params
   const search = Route.useSearch();
@@ -86,6 +86,7 @@ function DashboardPage() {
   const companyFilter = search.company ?? "all";
   const goalFilter = search.goal ?? "all";
   const openOnly = search.open === true;
+  const nameQuery = search.q ?? "";
 
   function setSearchParam(key: keyof DashboardSearch, value: string | boolean | undefined) {
     navigate({
@@ -93,7 +94,7 @@ function DashboardPage() {
       params: { eventId },
       search: (prev: DashboardSearch) => {
         const next = { ...prev } as DashboardSearch;
-        if (value === undefined || value === "all" || value === false) {
+        if (value === undefined || value === "all" || value === false || value === "") {
           delete next[key];
         } else {
           (next as any)[key] = value;
@@ -108,6 +109,7 @@ function DashboardPage() {
   const setCompanyFilter = (v: string) => setSearchParam("company", v);
   const setGoalFilter = (v: string) => setSearchParam("goal", v);
   const setOpenOnly = (v: boolean) => setSearchParam("open", v);
+  const setNameQuery = (v: string) => setSearchParam("q", v);
 
   useEffect(() => {
     (async () => {
@@ -115,9 +117,8 @@ function DashboardPage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      const [{ data: ev }, { data: codeData }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
+      const [{ data: ev }, { data: myAcc }, { data: myMem }, { data: rows }] = await Promise.all([
         supabase.from("events").select("name, organizer_account_id").eq("id", eventId).maybeSingle(),
-        supabase.rpc("get_event_code", { _event_id: eventId }),
         supabase.from("accounts").select("name").eq("id", userData.user.id).maybeSingle(),
         supabase
           .from("event_memberships")
@@ -142,8 +143,14 @@ function DashboardPage() {
         return;
       }
       setEventName(ev.name);
-      setEventCode((codeData as string | null) ?? null);
-      setIsOrganizer(ev.organizer_account_id === userData.user.id);
+      const organizer = ev.organizer_account_id === userData.user.id;
+      setIsOrganizer(organizer);
+
+      // Only organizers need the event code (used by SharePanel).
+      if (organizer) {
+        const { data: codeData } = await supabase.rpc("get_event_code", { _event_id: eventId });
+        setEventCode((codeData as string | null) ?? null);
+      }
 
       setMyName(myAcc?.name ?? "");
       setMyTags(mine);
@@ -161,6 +168,16 @@ function DashboardPage() {
         overlap: overlapTags(mine, r.goal_tags ?? []),
       }));
       setAttendees(mapped);
+
+      // Village = counterpart memberships from two-way message threads.
+      const { data: conn } = await supabase.rpc("get_my_event_connections", { _event_id: eventId });
+      const ids = new Set<string>(
+        Array.isArray(conn)
+          ? (conn as Array<{ counterpart_membership_id: string }>).map((c) => c.counterpart_membership_id)
+          : [],
+      );
+      setConnectionIds(ids);
+
       setLoading(false);
     })();
   }, [eventId, navigate]);
@@ -170,22 +187,9 @@ function DashboardPage() {
     [attendees],
   );
   const languageOptions = useMemo(
-    () => [
-      { value: "en", label: "English" },
-      { value: "fr", label: "French" },
-      { value: "pt", label: "Portuguese" },
-      { value: "es", label: "Spanish" },
-      { value: "de", label: "German" },
-    ],
+    () => LANGUAGE_OPTIONS.map((l) => ({ value: l.code, label: l.label })),
     [],
   );
-  const LANG_ALIASES: Record<string, string[]> = {
-    en: ["en", "english"],
-    fr: ["fr", "french", "français", "francais"],
-    pt: ["pt", "portuguese", "português", "portugues"],
-    es: ["es", "spanish", "español", "espanol"],
-    de: ["de", "german", "deutsch"],
-  };
   const companyOptions = useMemo(
     () => Array.from(new Set(attendees.map((a) => a.company).filter((v): v is string => !!v?.trim()))).sort(),
     [attendees],
@@ -199,22 +203,38 @@ function DashboardPage() {
     let v = attendees;
     if (roleFilter !== "all") v = v.filter((a) => (a.role ?? "").trim() === roleFilter);
     if (languageFilter !== "all") {
-      const aliases = (LANG_ALIASES[languageFilter] ?? [languageFilter]).map((s) => s.toLowerCase());
-      v = v.filter((a) => a.languages.some((l) => aliases.includes(l.toLowerCase())));
+      // Match by code first; fall back to alias mapping for legacy free-text values.
+      v = v.filter((a) =>
+        a.languages.some((l) => {
+          const lc = l.toLowerCase();
+          if (lc === languageFilter) return true;
+          return LANGUAGE_ALIASES[lc] === languageFilter;
+        }),
+      );
     }
     if (companyFilter !== "all") v = v.filter((a) => (a.company ?? "").trim() === companyFilter);
     if (goalFilter !== "all") v = v.filter((a) => a.tags.includes(goalFilter));
     if (openOnly) v = v.filter((a) => a.open_to_connect);
+    if (nameQuery.trim()) {
+      const q = nameQuery.trim().toLowerCase();
+      v = v.filter((a) => a.name.toLowerCase().includes(q));
+    }
     return [...v].sort((a, b) => {
       if (b.overlap.length !== a.overlap.length) return b.overlap.length - a.overlap.length;
       return a.name.localeCompare(b.name);
     });
-  }, [attendees, roleFilter, languageFilter, companyFilter, goalFilter, openOnly]);
+  }, [attendees, roleFilter, languageFilter, companyFilter, goalFilter, openOnly, nameQuery]);
+
+  const villagePeople = useMemo(
+    () => attendees.filter((a) => connectionIds.has(a.membership_id)),
+    [attendees, connectionIds],
+  );
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/", replace: true });
   }
+
 
   return (
     <div className="min-h-dvh bg-background">
