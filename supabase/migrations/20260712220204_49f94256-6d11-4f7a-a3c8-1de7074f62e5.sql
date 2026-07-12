@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "event-images read" ON storage.objects;
