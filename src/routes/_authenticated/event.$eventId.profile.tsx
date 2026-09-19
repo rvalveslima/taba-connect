@@ -64,7 +64,7 @@ function ProfilePage() {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
-        navigate({ to: "/auth", replace: true });
+        navigate({ to: "/auth", search: { as: undefined }, replace: true });
         return;
       }
       const [{ data: ev }, { data: acc }, { data: mem }] = await Promise.all([
