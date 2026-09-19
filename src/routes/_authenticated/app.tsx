@@ -102,7 +102,7 @@ function AppHome() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: { as: undefined }, replace: true });
   }
 
   async function handleJoinByCode(e: React.FormEvent) {
